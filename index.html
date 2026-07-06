@@ -49,6 +49,31 @@
   .today-monster{margin-top:13px;background:var(--bg-soft);border:1px solid var(--line);border-left:3px solid var(--red);border-radius:9px;padding:10px 12px;font-size:13px;color:var(--txt)}
   .season-tip{margin-top:9px;background:var(--bg-soft);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:9px;padding:9px 12px;font-size:12.5px;color:var(--txt-dim)}
   .season-tip b{color:var(--amber)}
+
+  /* progress view */
+  .prog{margin-top:12px;background:var(--card);border:1px solid var(--line-soft);border-radius:14px;overflow:hidden}
+  .prog-toggle{width:100%;background:none;border:none;color:var(--txt-dim);font-size:12.5px;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+  .prog-toggle b{color:var(--amber);font-variant-numeric:tabular-nums}
+  .prog-toggle svg{transition:transform .2s;color:var(--txt-faint)}
+  .prog-toggle svg.open{transform:rotate(180deg)}
+  .prog-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+  .prog-body.open{max-height:400px}
+  .prog-label{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--txt-faint);font-weight:600;padding:0 15px}
+  .heatmap{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,1fr);gap:4px;max-width:340px;margin:9px 15px 2px}
+  .hm-cell{aspect-ratio:1;border-radius:3px}
+  .hm-cell.empty{background:transparent!important}
+  .mchart{display:flex;align-items:flex-end;gap:8px;padding:10px 15px 4px;height:64px}
+  .mbar-wrap{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1}
+  .mbar{width:100%;max-width:26px;background:var(--accent-dim);border-radius:4px 4px 0 0;transition:.2s}
+  .mbar.on{background:var(--amber)}
+  .mbar-wrap span{font-size:10px;color:var(--txt-faint)}
+  .prog-foot{font-size:11.5px;color:var(--txt-faint);padding:6px 15px 14px}
+
+  /* info card (suplementos que no valen la pena / analitica) */
+  .info-card{background:var(--bg-soft);border:1px solid var(--line);border-left:3px solid var(--violet);border-radius:12px;padding:13px 15px}
+  .info-card h4{font-size:13.5px;font-weight:640;margin-bottom:6px;color:var(--txt)}
+  .info-card p{font-size:12.5px;color:var(--txt-dim);line-height:1.55}
+  .info-card p b{color:var(--txt)}
   .today-monster b{color:var(--amber)}
   .status-ctrl{display:flex;gap:8px;margin-top:13px;flex-wrap:wrap}
   .pbtn{background:var(--card);border:1px solid var(--line);color:var(--txt-dim);font-size:12px;font-weight:520;padding:7px 11px;border-radius:9px;cursor:pointer;transition:.15s}
@@ -154,6 +179,7 @@
 
 <div class="wrap">
   <div class="status" id="statusBanner"></div>
+  <div id="progressView"></div>
   <main id="app"></main>
 
   <p class="sec-title">Sobre las crisis con la muerte</p>
@@ -175,7 +201,7 @@
 
 <script>
 const CHK='<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>';
-const CAT_COLOR={work:'var(--blue)',sport:'var(--accent)',food:'var(--amber)',sleep:'var(--violet)',skin:'var(--red)',mind:'#48c9b0'};
+const CAT_COLOR={work:'var(--blue)',sport:'var(--accent)',food:'var(--amber)',sleep:'var(--violet)',skin:'var(--red)',mind:'#48c9b0',health:'#e08ac0'};
 const SLOT_IC={
  wake:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
  ammorning:'<rect x="3" y="4" width="18" height="12" rx="1"/><path d="M2 20h20"/>',
@@ -183,7 +209,8 @@ const SLOT_IC={
  afternoon:'<rect x="3" y="4" width="18" height="12" rx="1"/><path d="M2 20h20M8 12l4-4 4 4"/>',
  train:'<path d="M6 9v6M18 9v6M4 12h2M18 12h2M9 8v8M15 8v8M9 12h6"/>',
  evening:'<path d="M12 3c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9Z"/>',
- sleep:'<path d="M20 14a8 8 0 1 1-9.5-9 6 6 0 0 0 9.5 9Z"/>'
+ sleep:'<path d="M20 14a8 8 0 1 1-9.5-9 6 6 0 0 0 9.5 9Z"/>',
+ supp:'<path d="M10.5 20.5a5 5 0 0 1-7-7l6-6a5 5 0 0 1 7 7l-6 6ZM8 8l8 8"/>'
 };
 const SLOTS=[
  {id:'wake',name:'Al despertar',time:'07:00 – 09:00'},
@@ -191,6 +218,7 @@ const SLOTS=[
  {id:'midday',name:'Mediodía',time:'13:00 – 15:00'},
  {id:'afternoon',name:'Tarde de trabajo',time:'15:00 – 19:00'},
  {id:'train',name:'Entrenamiento',time:'hoy según el día'},
+ {id:'supp',name:'Suplementos',time:'con las comidas / noche'},
  {id:'evening',name:'Noche',time:'20:00 – 23:00'},
  {id:'sleep',name:'Antes de dormir',time:'al acostarte'}
 ];
@@ -255,6 +283,9 @@ const DATA=[
  {id:'m_focus',slot:'ammorning',phase:5,cat:'work',t:'Un bloque de foco sin móvil a la vista',m:'Móvil en otra habitación o cajón',lvl:'mod',
   why:'Separar el móvil mejora foco y baja la ansiedad de fondo. Terminas antes = trabajas menos horas. Doble beneficio para un autónomo sin horario.',
   src:'Ward et al. 2017 ("brain drain" del smartphone).'},
+ {id:'m_hearing',slot:'ammorning',phase:5,cat:'health',t:'Cascos por debajo del 60% de volumen',m:'Cuida el oído: es prevención de demencia a largo plazo',lvl:'strong',
+  why:'La pérdida de audición es, según la comisión Lancet, el MAYOR factor de riesgo modificable de demencia en la mediana edad. Pasas muchas horas con cascos: bajar el volumen (regla 60/60: máx 60% durante máx 60 min seguidos) protege el oído décadas antes de que se note. Barato y para siempre.',
+  src:'Livingston et al., Lancet Commission on dementia prevention 2020/2024.'},
  // MIDDAY
  {id:'d_lunch',slot:'midday',phase:4,cat:'food',t:'Comida base mediterránea',m:'Verdura + legumbre/integral + AOVE como grasa principal',lvl:'strong',
   why:'El único patrón dietético con ensayo aleatorizado grande: dieta mediterránea con AOVE o frutos secos redujo ~30% los eventos cardiovasculares mayores.',
@@ -268,6 +299,9 @@ const DATA=[
  {id:'d_nature',slot:'midday',phase:1,cat:'mind',seasonId:'nature',t:'Paseo al aire libre (sol + pasos)',m:'',lvl:'mod',
   why:'Junta pasos, luz de día y naturaleza. Pasar ≥120 min/semana en naturaleza se asoció a más bienestar y salud percibida, con umbral claro. En verano, con 35–40 °C, evita el sol central (12–17 h): sal a primera hora o al atardecer, con sombra y agua — el golpe de calor no perdona.',
   src:'White et al., Scientific Reports 2019 (~20.000 personas).'},
+ {id:'d_ferment',slot:'midday',phase:3,cat:'food',t:'Un fermentado al día (yogur, kéfir, chucrut)',m:'Diversidad de microbiota, menos inflamación',lvl:'mod',
+  why:'Una dieta rica en alimentos fermentados aumentó la diversidad de la microbiota y bajó marcadores de inflamación en un ensayo de Stanford. Un intestino diverso se asocia a mejor salud metabólica e inmune. Fácil: un yogur natural, kéfir o un poco de chucrut al día.',
+  src:'Wastyk et al., Cell 2021 (ensayo, Stanford; fermentados ↑ diversidad, ↓ inflamación).'},
  {id:'d_social',slot:'midday',phase:1,cat:'mind',t:'Contacto significativo con alguien',m:'Llamada, visita, quedar — no un "like"',lvl:'strong',
   why:'La conexión social es de los predictores de longevidad más potentes: la soledad eleva la mortalidad como fumar. Harvard: la calidad de las relaciones predice salud y felicidad. Vives en un pueblo: úsalo.',
   src:'Holt-Lunstad et al., PLoS Med 2010. Estudio de Harvard (Waldinger).'},
@@ -282,13 +316,33 @@ const DATA=[
  {id:'train_today',slot:'train',phase:1,cat:'sport',t:'Entrenamiento de hoy',m:'',lvl:'strong',
   why:'Tu semana: Lun pierna (máquinas), Mar espalda-bíceps, Mié descanso activo, Jue hangboard + espalda de escalada, Vie pecho-hombro, Sáb escalada, Dom descanso. Entrenar fuerza baja la mortalidad ~10–20% y cada músculo rinde más con ≥2 estímulos/semana y ~48 h de recuperación. Un punto flojo: no tienes cardio de resistencia, y el VO2max es el predictor de supervivencia más fuerte — por eso el miércoles metes 20–30 min de Zona 2. Ojo a los dedos: hangboard (Jue) y escalada (Sáb) tan seguidos cargan las poleas; calienta y para si molesta.',
   src:'Momma et al., BJSM 2022 (fuerza y mortalidad). Mandsager et al., JAMA Netw Open 2018 (VO2max). Meeusen (ECSS/ACSM) 2013 (recuperación).'},
+ {id:'t_sauna',slot:'train',phase:6,cat:'health',t:'Sauna 2–4×/semana (opcional, si tienes acceso)',m:'15–20 min; buena evidencia cardiovascular',lvl:'mod',
+  why:'En cohortes finlandesas, usar sauna 4–7×/semana se asoció a bastante menos mortalidad cardiovascular y por cualquier causa frente a 1×/semana. No es imprescindible ni urgente (por eso va al final), pero si tienes acceso, suma. No sustituye al ejercicio.',
+  src:'Laukkanen et al., JAMA Intern Med 2015; revisiones 2018 (cohorte KIHD, Finlandia).'},
  {id:'t_balance',slot:'train',phase:2,cat:'sport',t:'Equilibrio: 30 s a una pierna, cada lado',m:'También mientras te lavas los dientes',lvl:'mod',
   why:'No aguantar 10 s sobre una pierna a partir de la mediana edad se asoció a casi el doble de mortalidad. Gratis; progresa cerrando los ojos.',
   src:'Araujo et al., BJSM 2022.'},
- {id:'t_creatine',slot:'train',phase:4,cat:'food',t:'5 g de creatina monohidrato',m:'Cualquier hora, también en días de descanso',lvl:'strong',
-  why:'El suplemento deportivo más estudiado y seguro. Con entrenamiento, ~+1,1 kg de masa magra y más fuerza. El mito del riñón está desmentido.',
-  src:'Delpino et al., Nutrition 2022. Seguridad: Longobardi et al., Nutrients 2023.'},
+ // SUPLEMENTOS (los que SÍ tienen evidencia; son el 5% menos importante, pero bien elegidos)
+ {id:'sup_creatine',slot:'supp',phase:1,cat:'health',t:'Creatina monohidrato · 5 g',m:'Cualquier hora, también en días de descanso',lvl:'strong',
+  why:'El suplemento deportivo más estudiado y seguro que existe. Con entrenamiento, ~+1,1 kg de masa magra y más fuerza; posible ayuda cognitiva si duermes mal o eres vegetariano. El mito del riñón está desmentido (sube la creatinina en analítica sin dañar el filtrado; avisa al médico si te analizas). El susto del pelo se apoya en un solo estudio de 20 personas que ni midió el pelo.',
+  src:'Delpino et al., Nutrition 2022 (35 estudios). Seguridad renal: Longobardi et al., Nutrients 2023.'},
+ {id:'sup_vitd',slot:'supp',phase:1,cat:'health',seasonId:'vitd',t:'Vitamina D3 · 1000–2000 UI',m:'',lvl:'mod',
+  why:'"Medir y tratar", no tragar por defecto. En gente ya repleta, los grandes ensayos (VITAL, D-Health) no vieron beneficio en mortalidad, cáncer ni fracturas: el beneficio se concentra en corregir déficit real. Trabajas en interior — mídete el 25-OH-D una vez (objetivo ≥30 ng/ml) y en invierno/otoño toma 1000–2000 UI con una comida. Segura hasta 4000 UI/día.',
+  src:'Manson et al. (VITAL), NEJM 2019 (25.871 personas). Gaksch et al., PLoS One 2017 (umbral/meseta).'},
+ {id:'sup_omega',slot:'supp',phase:1,cat:'health',t:'Omega-3 EPA/DHA · ~1 g (o pescado azul 2×/sem)',m:'Con una comida con grasa',lvl:'mod',
+  why:'El beneficio cardiovascular más claro viene del pescado azul como comida (curva en U, ~1–2 raciones/semana). Las cápsulas para prevención han dado resultados modestos, pero si no llegas al pescado, ~1 g/día de EPA+DHA es una red razonable. Más no es mejor.',
+  src:'Meta-análisis dosis-respuesta pescado, PMC10261309 (2023, 911.348 personas).'},
+ {id:'sup_mag',slot:'supp',phase:2,cat:'health',t:'Magnesio (glicinato/bisglicinato) · ~200–300 mg',m:'Por la noche; ayuda a sueño y músculo',lvl:'weak',
+  why:'Mucha gente anda algo justa de magnesio; el glicinato se tolera bien y sin efecto laxante. Evidencia modesta para calidad de sueño y calambres. No es imprescindible, pero es barato y seguro, y encaja con tu foco en el sueño.',
+  src:'Revisiones de magnesio y sueño (evidencia limitada/heterogénea).'},
+ {id:'sup_hype',slot:'supp',phase:1,info:true,title:'Los que NO valen la pena (ahórrate el dinero)',
+  body:'Para todo esto, la evidencia HUMANA de longevidad es nula; el "hype" viene de ratones o de subir un biomarcador, no de vivir más:<br><b>NMN / NR</b> — suben el NAD+ y poco más; sin beneficio en resultados duros (Martens 2018; meta-análisis 2024 nulo). <b>Resveratrol</b> — biodisponibilidad &lt;1%, mecanismo desmontado, sin beneficio en mortalidad (Semba 2014). <b>Taurina</b> — solo ratones; un estudio humano de 2025 no halló ni relación con la edad. <b>Espermidina</b> — el mejor RCT (12 meses) salió nulo. <b>Rapamicina / metformina en sanos</b> — sin datos de longevidad humana; la metformina incluso frena las ganancias del ejercicio (Konopka 2019). <b>Colágeno en cápsulas/cremas</b> — marketing. El "Blueprint" de Bryan Johnson es un n=1 sin control: lo que funciona de él (dormir, entrenar, comer real, no fumar ni beber) ya lo tienes aquí gratis.'},
+ {id:'sup_labs',slot:'supp',phase:3,info:true,title:'Una vez al año: analítica y prevención',
+  body:'Lo que de verdad mueve la aguja se mide, no se supone. Pide a tu médico, ~1×/año:<br><b>ApoB</b> o perfil lipídico (el mejor marcador de riesgo cardiovascular), <b>glucosa y HbA1c</b>, <b>tensión arterial</b> (el factor de riesgo nº1 y silencioso), <b>25-OH-D</b>, <b>ferritina</b> y <b>hs-CRP</b> (inflamación). Suma <b>dentista 1–2×/año</b> y revisa <b>lunares</b> (piel). Con estos números el plan deja de ser a ciegas.'},
  // EVENING
+ {id:'e_teeth',slot:'evening',phase:2,cat:'health',t:'Cepillado + hilo dental',m:'Sobre todo el hilo, por la noche',lvl:'mod',
+  why:'La enfermedad de las encías (periodontitis) se asocia de forma consistente a más riesgo cardiovascular y se ha vinculado también con el deterioro cognitivo: la inflamación crónica de la boca no se queda en la boca. El hilo dental diario es la parte que casi todo el mundo se salta. Barato, dos minutos, alto retorno.',
+  src:'Meta-análisis de periodontitis y enfermedad cardiovascular (p. ej. Sanz et al., consenso EFP/AHA); Lancet Commission on dementia 2020/2024.'},
  {id:'e_face_pm',slot:'evening',phase:2,cat:'skin',t:'Piel noche: limpiar + retinoide + hidratar',m:'Retinol 2–3 noches/semana al principio, subir según tolerancia',lvl:'strong',
   why:'Tras el SPF, los retinoides son el activo con más evidencia: estimulan colágeno y mejoran textura y fotoenvejecimiento. Van de noche; el hidratante encima mejora la tolerancia.',
   src:'Múltiples RCTs de tretinoína/retinol; Mukherjee et al., Clin Interv Aging 2006.'},
@@ -355,10 +409,12 @@ function seasonSub(it){
     :'Empiezas hidratado el día';
   if(it.seasonId==='light')return hot?'Sal temprano, antes de que apriete el calor (10 min bastan)'
     :'Sal fuera nada más levantarte; vives en un pueblo, aprovéchalo';
+  if(it.seasonId==='vitd')return hot?'En verano, con sol diario, casi no hace falta. Prioriza la analítica'
+    :'Otoño-invierno o poco sol: 1000–2000 UI con una comida. Ideal: mídete el 25-OH-D';
   return it.m;
 }
 function dayRec(){const k=todayKey();if(!state.days[k])state.days[k]={done:[]};return state.days[k];}
-function activeDaily(){return DATA.filter(i=>i.phase<=phaseNow());}
+function activeDaily(){return DATA.filter(i=>i.phase<=phaseNow()&&!i.info);}
 function todaySession(){return SESSIONS[new Date().getDay()];}
 
 /* ---------- RENDER ---------- */
@@ -368,24 +424,31 @@ function lvlHtml(l){const m={strong:['strong','evidencia fuerte'],mod:['mod','ev
 
 function render(){
   renderStatus();
+  renderProgress();
   app.innerHTML='';
   const day=dayRec();
   SLOTS.forEach(slot=>{
     const items=DATA.filter(i=>i.slot===slot.id&&i.phase<=phaseNow());
     if(!items.length)return;
-    const doneCount=items.filter(i=>day.done.includes(i.id)).length;
+    const checkable=items.filter(i=>!i.info);
+    const doneCount=checkable.filter(i=>day.done.includes(i.id)).length;
     const sec=document.createElement('section');sec.className='slot';
     sec.innerHTML=`
       <div class="slot-head">
         <div class="slot-ic"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">${SLOT_IC[slot.id]}</svg></div>
         <div class="slot-title"><h3>${slot.name}</h3><span class="time">${slot.time}</span></div>
-        <div class="slot-prog">${doneCount}/${items.length}</div>
+        ${checkable.length?`<div class="slot-prog">${doneCount}/${checkable.length}</div>`:''}
       </div><div class="items"></div>`;
     const list=sec.querySelector('.items');
-    items.forEach(it=>list.appendChild(it.id==='train_today'?sessionEl(it,day):dailyEl(it,day)));
+    items.forEach(it=>list.appendChild(it.info?infoEl(it):(it.id==='train_today'?sessionEl(it,day):dailyEl(it,day))));
     app.appendChild(sec);
   });
   updateHeader();
+}
+function infoEl(it){
+  const el=document.createElement('div');el.className='info-card';
+  el.innerHTML=`<h4>${it.title}</h4><p>${it.body}</p>`;
+  return el;
 }
 
 function tagsFor(it){
@@ -442,6 +505,43 @@ function wireWhy(el){
   btn.addEventListener('click',e=>{e.stopPropagation();const open=btn.classList.toggle('open');
     panel.style.maxHeight=open?panel.scrollHeight+30+'px':'0';
     btn.childNodes[btn.childNodes.length-1].textContent=open?' ocultar evidencia':' ver evidencia';});
+}
+
+let progOpen=false;
+function renderProgress(){
+  const c=document.getElementById('progressView');
+  // stats
+  const cur=computeStreak();
+  let logged=0,sum=0;
+  Object.keys(state.days).forEach(k=>{const p=dayPctFor(k);if(state.days[k].done.length){logged++;sum+=p;}});
+  const avg=logged?Math.round(sum/logged*100):0;
+  // heatmap: ultimas 8 semanas (56 dias), columnas = semanas
+  const cells=[];const today=new Date();
+  for(let col=7;col>=0;col--){for(let row=0;row<7;row++){
+    const dd=new Date(today);const off=col*7 + (6-row);dd.setDate(today.getDate()-off);
+    if(dd>today){cells.push('<div class="hm-cell empty"></div>');continue;}
+    const k=ymd(dd);const has=state.days[k]&&state.days[k].done.length;const p=has?dayPctFor(k):-1;
+    let bg='var(--line-soft)';if(p>=0.9)bg='var(--accent)';else if(p>=0.6)bg='rgba(75,208,160,.6)';else if(p>=0.3)bg='rgba(75,208,160,.32)';else if(p>=0)bg='rgba(75,208,160,.14)';
+    cells.push(`<div class="hm-cell" style="background:${bg}" title="${k}: ${p>=0?Math.round(p*100)+'%':'sin registrar'}"></div>`);
+  }}
+  // curva del Monster (ml objetivo por semana), semana actual marcada
+  const wn=weekNum();const bars=[1,2,3,4,5,6,7].map(w=>{const ml=MONSTER_ML[Math.min(7,w)];const h=Math.max(4,ml/1000*46);const on=w===Math.min(7,wn);
+    return `<div class="mbar-wrap"><div class="mbar ${on?'on':''}" style="height:${h}px" title="Semana ${w}: ${ml} ml"></div><span>${w}</span></div>`;}).join('');
+  c.innerHTML=`
+    <div class="prog">
+      <button class="prog-toggle" id="progToggle">
+        <span><b>${cur}</b> días de racha · ${logged} registrados · ${avg}% medio</span>
+        <svg class="${progOpen?'open':''}" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="prog-body ${progOpen?'open':''}">
+        <div class="prog-label">Últimas 8 semanas — cada cuadro es un día</div>
+        <div class="heatmap">${cells.join('')}</div>
+        <div class="prog-label" style="margin-top:14px">Tu Monster, semana a semana (ml objetivo)</div>
+        <div class="mchart">${bars}</div>
+        <div class="prog-foot">El objetivo baja solo cada semana hasta 0. Marca al menos el 60% de tu día para sumar racha.</div>
+      </div>
+    </div>`;
+  c.querySelector('#progToggle').addEventListener('click',()=>{progOpen=!progOpen;renderProgress();});
 }
 
 function renderStatus(){

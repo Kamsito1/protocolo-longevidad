@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Protocolo · rutina progresiva por horas</title>
+<style>
+  :root{
+    --bg:#0b0d10;--bg-soft:#111418;--card:#14181d;--card-2:#171c22;
+    --line:#232a31;--line-soft:#1c222a;--txt:#e7ecf1;--txt-dim:#9aa6b2;--txt-faint:#66727e;
+    --accent:#4bd0a0;--accent-dim:#2c7d63;--amber:#e0a34a;--red:#e06a5a;--blue:#5aa9e0;--violet:#9a8cf0;
+    --radius:14px;--sh:0 1px 0 rgba(255,255,255,.02),0 8px 30px -12px rgba(0,0,0,.6);
+    font-synthesis:none;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  body{padding:0 0 120px}
+  ::selection{background:rgba(75,208,160,.25)}
+  .wrap{max-width:760px;margin:0 auto;padding:0 18px}
+
+  header.top{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,var(--bg) 70%,rgba(11,13,16,.85));
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line-soft)}
+  .top-inner{display:flex;align-items:center;gap:16px;padding:12px 18px;max-width:760px;margin:0 auto}
+  .brand{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
+  .brand .k{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--txt-faint);font-weight:600}
+  .brand h1{font-size:17px;font-weight:650;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand .date{font-size:12px;color:var(--txt-dim);text-transform:capitalize}
+  .ring-wrap{display:flex;align-items:center;gap:13px}
+  .streak{display:flex;flex-direction:column;align-items:flex-end}
+  .streak .n{font-size:19px;font-weight:700;line-height:1;color:var(--amber);font-variant-numeric:tabular-nums}
+  .streak .l{font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--txt-faint)}
+  .ring{position:relative;width:50px;height:50px;flex:0 0 auto}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}
+
+  /* Phase banner */
+  .phase{margin-top:18px;background:linear-gradient(160deg,var(--card-2),var(--card));
+    border:1px solid var(--line);border-radius:16px;padding:16px 16px 14px}
+  .phase-top{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .phase-badge{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--accent);
+    background:rgba(75,208,160,.1);border:1px solid var(--accent-dim);border-radius:20px;padding:4px 11px;white-space:nowrap}
+  .phase-info{flex:1;min-width:180px}
+  .phase-info h2{font-size:16px;font-weight:650;letter-spacing:-.01em}
+  .phase-info .wk{font-size:12px;color:var(--txt-faint)}
+  .phase-info .goal{font-size:13px;color:var(--txt-dim);margin-top:5px}
+  .stepper{display:flex;gap:5px;margin-top:14px}
+  .step{flex:1;height:5px;border-radius:3px;background:var(--line);transition:.2s}
+  .step.on{background:var(--accent)}
+  .step.cur{background:var(--amber);box-shadow:0 0 0 2px rgba(224,163,74,.18)}
+  .phase-ctrl{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center}
+  .pbtn{background:var(--card);border:1px solid var(--line);color:var(--txt);font-size:12.5px;font-weight:550;
+    padding:8px 13px;border-radius:9px;cursor:pointer;transition:.15s}
+  .pbtn:hover:not(:disabled){border-color:var(--accent-dim)}
+  .pbtn.primary{background:var(--accent-dim);border-color:var(--accent);color:#eafff6}
+  .pbtn:disabled{opacity:.4;cursor:not-allowed}
+  .pbtn.ghost{background:none;color:var(--txt-faint);border-color:transparent;padding:8px 4px}
+  .pbtn.ghost:hover{color:var(--txt-dim)}
+  .unlock{margin-top:12px;font-size:12.5px;color:var(--txt-dim);border-top:1px solid var(--line-soft);padding-top:11px;display:none}
+  .unlock.show{display:block}
+  .unlock b{color:var(--accent);font-weight:600}
+  .unlock ul{margin:7px 0 0;padding-left:2px;list-style:none}
+  .unlock li{font-size:12.5px;color:var(--txt-dim);padding:3px 0 3px 16px;position:relative}
+  .unlock li:before{content:"";position:absolute;left:2px;top:11px;width:5px;height:5px;border-radius:50%;background:var(--line)}
+  .unlock li.bad:before{background:var(--red)}
+
+  /* Slot */
+  .slot{margin-top:24px}
+  .slot-head{display:flex;align-items:center;gap:11px;margin:0 2px 11px}
+  .slot-ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto;
+    background:var(--card-2);border:1px solid var(--line);color:var(--txt-dim)}
+  .slot-ic svg{width:16px;height:16px;stroke-width:1.7;fill:none;stroke:currentColor}
+  .slot-title{flex:1}
+  .slot-title h3{font-size:14.5px;font-weight:640;letter-spacing:-.005em}
+  .slot-title .time{font-size:11.5px;color:var(--txt-faint);font-variant-numeric:tabular-nums}
+  .slot-prog{font-size:11.5px;color:var(--txt-dim);font-variant-numeric:tabular-nums;
+    background:var(--card);border:1px solid var(--line);border-radius:20px;padding:3px 9px}
+
+  .items{display:flex;flex-direction:column;gap:7px}
+  .item{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--radius);box-shadow:var(--sh);overflow:hidden;transition:.18s}
+  .item:hover{border-color:var(--line)}
+  .item.done{background:var(--card-2)}
+  .item.bad{border-left:3px solid var(--red)}
+  .item.bad.done{border-left-color:var(--accent)}
+  .row{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;cursor:pointer;user-select:none}
+  .box{width:21px;height:21px;flex:0 0 auto;margin-top:1px;border-radius:7px;border:1.8px solid var(--line);display:grid;place-items:center;transition:.16s}
+  .box svg{width:12px;height:12px;opacity:0;transform:scale(.6);transition:.16s;stroke:#07110d;stroke-width:3;fill:none}
+  .item.done .box{background:var(--accent);border-color:var(--accent)}
+  .item.done .box svg{opacity:1;transform:scale(1)}
+  .cdot{width:7px;height:7px;border-radius:50%;flex:0 0 auto;margin-top:8px}
+  .txt{flex:1;min-width:0}
+  .txt .t{font-size:14.5px;font-weight:520;letter-spacing:-.003em;transition:.16s}
+  .item.done .txt .t{color:var(--txt-dim);text-decoration:line-through;text-decoration-color:var(--line)}
+  .txt .m{font-size:12.5px;color:var(--txt-faint);margin-top:2px}
+  .tags{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
+  .tag{font-size:10px;letter-spacing:.03em;text-transform:uppercase;font-weight:600;padding:2px 7px;border-radius:6px;background:var(--bg-soft);color:var(--txt-dim);border:1px solid var(--line-soft)}
+  .tag.key{color:var(--accent)} .tag.bad{color:var(--red)} .tag.new{color:var(--amber);border-color:rgba(224,163,74,.3)}
+
+  .dots{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  .dot{width:26px;height:26px;border-radius:8px;border:1.7px solid var(--line);background:transparent;cursor:pointer;transition:.14s;display:grid;place-items:center}
+  .dot svg{width:12px;height:12px;opacity:0;transition:.14s;stroke:#eafff6;stroke-width:3;fill:none}
+  .dot.on{background:var(--accent-dim);border-color:var(--accent)}
+  .dot.on svg{opacity:1}
+  .wk-count{font-size:11.5px;color:var(--txt-dim);font-variant-numeric:tabular-nums;margin-left:auto;white-space:nowrap;text-align:right}
+
+  .why-btn{background:none;border:none;color:var(--txt-faint);font-size:12px;cursor:pointer;padding:0 14px 12px 47px;display:flex;align-items:center;gap:5px;transition:.15s}
+  .why-btn:hover{color:var(--accent)}
+  .why-btn svg{width:12px;height:12px;transition:transform .2s;fill:none;stroke:currentColor}
+  .why-btn.open svg{transform:rotate(180deg)}
+  .why{max-height:0;overflow:hidden;transition:max-height .28s ease}
+  .why-in{padding:0 14px 14px 47px;font-size:12.8px;color:var(--txt-dim);line-height:1.55}
+  .why-in .src{margin-top:6px;color:var(--txt-faint);font-size:11.5px;border-left:2px solid var(--line);padding-left:9px}
+  .lvl{display:inline-block;font-size:10px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;padding:1px 6px;border-radius:5px;margin-bottom:6px}
+  .lvl.strong{background:rgba(75,208,160,.13);color:var(--accent)}
+  .lvl.mod{background:rgba(224,163,74,.13);color:var(--amber)}
+  .lvl.weak{background:rgba(224,106,90,.13);color:var(--red)}
+
+  .note-card{margin-top:14px;background:linear-gradient(160deg,var(--card-2),var(--card));border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .note-card h3{font-size:14px;font-weight:640;margin-bottom:7px}
+  .note-card p{font-size:13px;color:var(--txt-dim);margin-bottom:8px}
+  .note-card .line{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--txt);background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;padding:6px 11px;margin-top:4px}
+  .note-card .line b{color:var(--accent)}
+  .sec-title{margin:30px 2px 0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--txt-faint);font-weight:600}
+
+  .foot{margin-top:30px;padding-top:18px;border-top:1px solid var(--line-soft);display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+  .foot .stat{font-size:12.5px;color:var(--txt-faint)}
+  .foot .stat b{color:var(--txt-dim)}
+  .btn{background:var(--card-2);border:1px solid var(--line);color:var(--txt-dim);font-size:12.5px;padding:8px 13px;border-radius:9px;cursor:pointer;transition:.15s;font-weight:520}
+  .btn:hover{border-color:var(--accent-dim);color:var(--txt)}
+  .credit{margin-top:20px;font-size:11px;color:var(--txt-faint);line-height:1.6}
+  @media(max-width:520px){.brand h1{font-size:15px}.why-btn,.why-in{padding-left:14px}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <span class="k">Protocolo</span>
+      <h1>Rutina progresiva por horas</h1>
+      <span class="date" id="today"></span>
+    </div>
+    <div class="ring-wrap">
+      <div class="streak"><span class="n" id="streakN">0</span><span class="l">racha</span></div>
+      <div class="ring">
+        <svg width="50" height="50" viewBox="0 0 50 50">
+          <circle cx="25" cy="25" r="21" fill="none" stroke="var(--line)" stroke-width="4"/>
+          <circle id="ringFg" cx="25" cy="25" r="21" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="131.9" stroke-dashoffset="131.9"/>
+        </svg>
+        <div class="pct" id="ringPct">0%</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="phase" id="phaseBanner"></div>
+  <main id="app"></main>
+
+  <p class="sec-title">Sobre las crisis con la muerte</p>
+  <div class="note-card">
+    <p>Pensar en la muerte con 27 años no es un defecto que optimizar. Pero cuando las crisis son <b style="color:var(--txt)">frecuentes e intensas</b>, lo que más evidencia tiene no es un hábito de esta lista: es hablar con un psicólogo con enfoque <b style="color:var(--txt)">ACT</b> o terapia centrada en el sentido (reducen la ansiedad ante la muerte en ensayos; Menzies 2018, Jiang 2024). La conexión y el propósito, que ya están en tu rutina, son además dos de los predictores de longevidad más fuertes que existen.</p>
+    <p style="margin-bottom:2px">Pide ayuda si interfiere con dormir, trabajar o disfrutar, o si aparecen pensamientos de no querer estar. Eso va por delante de cualquier check.</p>
+    <span class="line">España · atención a la conducta suicida: teléfono <b>&nbsp;024</b>&nbsp; (24 h, gratuito)</span>
+  </div>
+
+  <div class="foot">
+    <div class="stat">Hoy: <b id="statDone">0</b> · Mejor racha: <b id="statBest">0</b> días · Fase <b id="statPhase">1</b>/6</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" id="resetDay">Reiniciar día</button>
+      <button class="btn" id="expand">Ver toda la evidencia</button>
+    </div>
+  </div>
+
+  <p class="credit" id="credit"></p>
+</div>
+
+<script>
+const CHK='<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>';
+const CAT_COLOR={work:'var(--blue)',sport:'var(--accent)',food:'var(--amber)',sleep:'var(--violet)',skin:'var(--red)',mind:'#48c9b0'};
+const SLOT_IC={
+ wake:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+ ammorning:'<rect x="3" y="4" width="18" height="12" rx="1"/><path d="M2 20h20"/>',
+ midday:'<circle cx="12" cy="12" r="5"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4 4l2 2M18 18l2 2"/>',
+ afternoon:'<rect x="3" y="4" width="18" height="12" rx="1"/><path d="M2 20h20M8 12l4-4 4 4"/>',
+ train:'<path d="M6 9v6M18 9v6M4 12h2M18 12h2M9 8v8M15 8v8M9 12h6"/>',
+ evening:'<path d="M12 3c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9Z"/>',
+ sleep:'<path d="M20 14a8 8 0 1 1-9.5-9 6 6 0 0 0 9.5 9Z"/>'
+};
+const SLOTS=[
+ {id:'wake',name:'Al despertar',time:'07:00 – 09:00'},
+ {id:'ammorning',name:'Mañana de trabajo',time:'09:00 – 13:00'},
+ {id:'midday',name:'Mediodía',time:'13:00 – 15:00'},
+ {id:'afternoon',name:'Tarde de trabajo',time:'15:00 – 19:00'},
+ {id:'train',name:'Entrenamiento',time:'cuando toque'},
+ {id:'evening',name:'Noche',time:'20:00 – 23:00'},
+ {id:'sleep',name:'Antes de dormir',time:'al acostarte'}
+];
+const PHASES=[
+ {n:1,name:'Cimientos',wk:'Semana 1–2',goal:'Lo fácil primero. Solo mueves el Monster de hora, sin bajar cantidad: cero abstinencia.'},
+ {n:2,name:'Menos silla, más piel',wk:'Semana 3–4',goal:'Rompes el sedentarismo y das el gran paso: de 2 a 1 Monster al día.'},
+ {n:3,name:'Motor cardio',wk:'Semana 5–6',goal:'Subes VO2max y fuerza de agarre. Monster día sí, día no.'},
+ {n:4,name:'Nutrición fina',wk:'Semana 7–8',goal:'Comes para durar. Adiós Monster, adiós alcohol y azúcar libre.'},
+ {n:5,name:'Mente y sentido',wk:'Semana 9–10',goal:'Domas el móvil, cuidas la cabeza y anclas el propósito.'},
+ {n:6,name:'Todo integrado',wk:'Semana 11 en adelante',goal:'Mantenimiento de por vida. Ya no es un plan: es como vives.'}
+];
+
+/* HABITS: slot, phase, cat, bad?, weekly?, taper? */
+const DATA=[
+ // ---- WAKE ----
+ {id:'w_light',slot:'wake',phase:1,cat:'sleep',t:'Luz natural exterior 10 min',m:'Sal fuera nada más levantarte; vives en un pueblo, aprovéchalo',lvl:'mod',
+  why:'Más luz de día se asoció a menos depresión y menor mortalidad; más luz artificial de noche, a lo contrario. La luz matinal ancla tu reloj circadiano, clave porque tu horario baila al ser autónomo.',
+  src:'Burns et al., Nature Mental Health 2023 (UK Biobank, ~87.000 personas con luz medida por acelerómetro).'},
+ {id:'w_water',slot:'wake',phase:1,cat:'food',t:'Un vaso de agua al levantarte',m:'Empiezas hidratado el día',lvl:'mod',
+  why:'La deshidratación crónica (sodio sérico alto-normal) se asoció a envejecer biológicamente más rápido y +21% mortalidad. No hace falta forzar litros: guíate por sed y orina color pajizo claro.',
+  src:'Dmitrieva et al., eBioMedicine 2023 (NIH/ARIC, 11.255 personas, 25 años).'},
+ {id:'w_monster',slot:'wake',phase:1,cat:'food',bad:true,t:'Monster',m:'',lvl:'strong',
+  taper:[
+   {from:1,rule:'Sigues con 2, pero los DOS antes de las 15 h. Solo cambias la hora, no la cantidad.'},
+   {from:2,rule:'Bajas a 1 al día, por la mañana. Café solo + agua con gas para el ritual que echas de menos.'},
+   {from:3,rule:'1 cada dos días. Los días sin Monster, café temprano + agua con gas.'},
+   {from:4,rule:'0. Sustituido del todo por café solo temprano + agua con gas cuando busques el gesto.'}],
+  why:'Tres cosas contra ti: (1) cafeína — 2 Monster ~320 mg, con tu café te pasas del techo seguro de 400 mg/día; (2) sueño, tu punto flojo — la cafeína tarda 5–6 h en irse, tomarla tarde te fragmenta el descanso; (3) "sin azúcar" no es gratis — las bebidas con edulcorante se asociaron a +13% mortalidad total y +26% cardiovascular. Es adicción real de cafeína: por eso se retira en RAMPA a lo largo de las fases, nunca de golpe (el corte seco da cefalea y bajón).',
+  src:'EFSA 2015 (<400 mg/día, <200 mg por toma). Drake et al., J Clin Sleep Med 2013 (cafeína hasta 6 h antes reduce el sueño). Edulcorantes: metaanálisis dosis-respuesta 2024 (PubMed 39085903).'},
+ {id:'w_spf',slot:'wake',phase:1,cat:'skin',t:'Protector solar SPF 30–50',m:'Aunque estés dentro o esté nublado. El gesto anti-edad nº1',lvl:'strong',
+  why:'El factor anti-edad de la piel con más evidencia, con diferencia. En el único ensayo aleatorizado del tema, el uso diario de protector solar frenó ~24% el fotoenvejecimiento en 4,5 años. El sol es la causa principal de arrugas y manchas.',
+  src:'Hughes et al., Ann Intern Med 2013 (RCT, 903 personas, Nambour, Australia).'},
+ {id:'w_face_am',slot:'wake',phase:2,cat:'skin',t:'Piel mañana: limpiar + hidratar',m:'Antes del SPF; niacinamida opcional',lvl:'mod',
+  why:'Limpieza suave e hidratación mantienen la barrera cutánea para que el SPF y los activos funcionen. La niacinamida es de los pocos extras con evidencia decente. El colágeno en crema es marketing: no penetra.',
+  src:'Consenso dermatológico; revisiones de niacinamida tópica.'},
+ {id:'w_breath',slot:'wake',phase:2,cat:'mind',t:'Respiración 5 min',m:'Suspiro fisiológico: doble inhalación + exhalación larga',lvl:'mod',
+  why:'En un ensayo de Stanford, 5 min/día de "cyclic sighing" mejoraron el ánimo y bajaron la activación más que la meditación. La exhalación larga activa el freno parasimpático: tu herramienta rápida para las crisis de ansiedad.',
+  src:'Balban et al., Cell Reports Medicine 2023 (RCT, 111 adultos, Stanford).'},
+ {id:'w_nophone',slot:'wake',phase:5,cat:'mind',bad:true,t:'Sin móvil la primera hora',m:'Que el día no empiece en la pantalla',lvl:'mod',
+  why:'Estás en ~5,5 h/día de móvil. Las dos franjas que más rinden al reducir son nada más despertar y antes de dormir: protegen ánimo, atención y sueño. La mera presencia del móvil ya baja tu capacidad cognitiva disponible.',
+  src:'Ensayos de reducción de uso y bienestar (Lambert 2022); literatura de "brain drain" del smartphone.'},
+
+ // ---- MORNING WORK ----
+ {id:'m_break',slot:'ammorning',phase:1,cat:'work',t:'Pausa activa cada 45 min',m:'Levántate, camina o mueve 2–3 min',lvl:'strong',
+  why:'Estar sentado muchas horas eleva la mortalidad de forma parcialmente independiente del ejercicio. La actividad ligera repartida compensa buena parte del daño, y ráfagas cortas de intensidad ya reducen el riesgo.',
+  src:'Ekelund et al., Lancet 2016 (>1M personas). Stamatakis et al., Nat Med 2022 (VILPA: ~4,4 min/día de actividad vigorosa ↔ menor mortalidad).'},
+ {id:'m_steps',slot:'ammorning',phase:1,cat:'sport',t:'8.000 pasos (ir sumando)',m:'A partir de ~7–8k el beneficio ya es casi máximo',lvl:'strong',
+  why:'La curva pasos–mortalidad cae con fuerza hasta ~7.000–8.000 y luego se aplana. No necesitas 10.000; necesitas no quedarte en 3.000 por trabajar sentado.',
+  src:'Paluch et al., Lancet Public Health 2022 (meta-análisis, ~47.000 personas).'},
+ {id:'m_stand',slot:'ammorning',phase:2,cat:'work',t:'30 min de pie o en la caminadora',m:'Tienes la mesa elevable y la cinta: úsalas mientras trabajas',lvl:'mod',
+  why:'Alternar de pie y caminar despacio reduce el tiempo sedentario total, el factor sobre el que tienes control directo pasando tantas horas al ordenador. No sustituye al entrenamiento, pero rompe el bloque continuo.',
+  src:'Basado en Ekelund 2016 y guías de actividad de la OMS 2020: "muévete más, siéntate menos".'},
+ {id:'m_eyes',slot:'ammorning',phase:2,cat:'work',t:'Regla 20-20-20 para la vista',m:'Cada 20 min, mira 20 s a ~6 m',lvl:'mod',
+  why:'La fatiga visual digital (ojo seco, visión borrosa, cefalea) es real con muchas horas de pantalla; las pausas de enfoque lejano relajan el ojo. La "luz azul" apenas daña la retina; su efecto relevante es sobre el sueño.',
+  src:'Sheppard & Wolffsohn, BMJ Open Ophthalmology 2018; Cochrane 2023 (gafas anti-luz-azul sin beneficio para el ojo).'},
+ {id:'m_focus',slot:'ammorning',phase:5,cat:'work',t:'Un bloque de foco sin móvil a la vista',m:'Móvil en otra habitación o cajón',lvl:'mod',
+  why:'Separar el móvil mejora foco y baja la ansiedad de fondo. Menos fragmentación = terminas antes = trabajas menos horas. Doble beneficio para un autónomo sin horario.',
+  src:'Literatura de "brain drain" del smartphone (Ward et al. 2017).'},
+
+ // ---- MIDDAY ----
+ {id:'d_lunch',slot:'midday',phase:4,cat:'food',t:'Comida base mediterránea',m:'Verdura + legumbre/integral + AOVE como grasa principal',lvl:'strong',
+  why:'El único patrón dietético con respaldo de ensayo aleatorizado grande: dieta mediterránea con AOVE o frutos secos redujo ~30% los eventos cardiovasculares mayores. El AOVE como grasa principal se asocia a ~19% menos mortalidad.',
+  src:'Estruch et al., PREDIMED, NEJM 2018 (7.447 personas, RCT). Guasch-Ferré et al., JACC 2022.'},
+ {id:'d_protein',slot:'midday',phase:4,cat:'food',t:'Proteína en la comida (~parte de tus 120 g/día)',m:'~1,6 g/kg repartida en el día',lvl:'strong',
+  why:'Para maximizar músculo, ~1,6 g/kg/día es el punto donde se aplana el beneficio; repartirla en varias tomas optimiza la síntesis. Clave si entrenas fuerza 4–5x.',
+  src:'Morton et al., BJSM 2018 (meta-análisis de 49 estudios).'},
+ {id:'d_caff',slot:'midday',phase:1,cat:'sleep',bad:true,t:'Última cafeína del día ≤ 15 h',m:'Ni café ni Monster después. Protege tu sueño',lvl:'strong',
+  why:'La cafeína tiene una vida media de 5–6 h; tomarla por la tarde recorta y fragmenta el sueño. Como la regularidad del sueño es tu mayor palanca, cortar pronto la cafeína es de lo más rentable que puedes hacer.',
+  src:'Drake et al., J Clin Sleep Med 2013 (cafeína 6 h antes de dormir reduce el sueño total).'},
+ {id:'d_nature',slot:'midday',phase:1,cat:'mind',t:'Paseo al mediodía (sol + pasos)',m:'15–20 min fuera; te cuenta para pasos y para naturaleza',lvl:'mod',
+  why:'Un paseo al aire libre junta tres cosas: pasos, luz de día y naturaleza. Pasar ≥120 min/semana en naturaleza se asoció a más bienestar y salud percibida, con umbral claro.',
+  src:'White et al., Scientific Reports 2019 (~20.000 personas).'},
+ {id:'d_social',slot:'midday',phase:1,cat:'mind',t:'Contacto significativo con alguien',m:'Llamada, visita, quedar — no un "like"',lvl:'strong',
+  why:'La conexión social es uno de los predictores de longevidad más potentes: la soledad eleva la mortalidad de forma comparable a fumar. El estudio de Harvard (85 años) concluyó que la calidad de las relaciones es el mejor predictor de salud y felicidad. Vives en un pueblo con familia y amigos: úsalo.',
+  src:'Holt-Lunstad et al., PLoS Med 2010 (308.849 personas). Estudio del Desarrollo Adulto de Harvard (Waldinger).'},
+
+ // ---- AFTERNOON WORK ----
+ {id:'a_mobility',slot:'afternoon',phase:2,cat:'sport',t:'Movilidad 5–10 min',m:'Caderas, tobillos, sentadilla profunda, suelo–de pie',lvl:'mod',
+  why:'La capacidad de sentarte y levantarte del suelo (test SRT) predice la mortalidad: cada punto de 10 ↔ ~21% menos riesgo. Combina fuerza, flexibilidad y equilibrio; de paso rindes más escalando.',
+  src:'Brito/Araújo, EJPC 2014 (2.002 personas) y Araújo et al., EJPC 2025 (4.282 personas).'},
+ {id:'a_stop',slot:'afternoon',phase:1,cat:'work',bad:true,t:'Poner hora de fin al trabajo',m:'Sin horario, el trabajo se come tu vida y tu corazón. No pasar de ~9–10 h',lvl:'strong',
+  why:'Trabajar ≥55 h/semana se asoció a un 35% más de ictus y 17% más de cardiopatía isquémica mortal frente a 35–40 h. Como autónomo sin horario eres justo el perfil de riesgo: poner un límite es literalmente una intervención de longevidad.',
+  src:'Pega et al. (OMS/OIT), Environment International 2021.'},
+
+ // ---- TRAIN ----
+ {id:'t_strength',slot:'train',phase:1,cat:'sport',weekly:4,t:'Sesión de fuerza',m:'Objetivo 4 por semana (ya lo haces)',lvl:'strong',
+  why:'Entrenar fuerza se asocia a ~10–20% menos mortalidad, con gran parte del beneficio ya en ~30–60 min/semana. Entrena cada grupo muscular ≥2x/semana; la palanca real de tus ganancias es el volumen semanal.',
+  src:'Momma et al., BJSM 2022. Schoenfeld et al., Sports Med 2016 / J Sports Sci 2019.'},
+ {id:'t_rest',slot:'train',phase:1,cat:'sport',weekly:2,t:'Día de descanso real',m:'Objetivo 1–2 por semana, sin carga alta',lvl:'strong',
+  why:'La síntesis proteica de un músculo sigue elevada ~24–48 h tras entrenarlo. Descansar no frena las ganancias si mantienes el volumen; lo que las frena es la fatiga acumulada. Vigila señales de sobrecarga: estancamiento, sueño peor, tendones (dedos/codos por la escalada).',
+  src:'Meeusen et al., consenso ECSS/ACSM 2013. Dormir <8 h ≈ ~1,7× riesgo de lesión (Milewski 2014).'},
+ {id:'t_balance',slot:'train',phase:2,cat:'sport',t:'Equilibrio: 30 s a una pierna, cada lado',m:'También sirve mientras te lavas los dientes',lvl:'mod',
+  why:'No poder aguantar 10 s sobre una pierna a partir de la mediana edad se asoció a casi el doble de mortalidad. Entrenarlo es gratis; progresa cerrando los ojos.',
+  src:'Araujo et al., BJSM 2022 (1.702 personas).'},
+ {id:'t_z2',slot:'train',phase:3,cat:'sport',weekly:2,t:'Cardio Zona 2 (30–45 min, ritmo conversable)',m:'Objetivo 2 por semana',lvl:'strong',
+  why:'La capacidad cardiorrespiratoria (VO2max) es uno de los predictores de supervivencia más fuertes medidos, sin techo de beneficio: pasar de "bajo" a "alto" fitness rivaliza con dejar de fumar. La zona 2 construye la base mitocondrial.',
+  src:'Mandsager et al., JAMA Network Open 2018 (122.007 personas, Cleveland Clinic).'},
+ {id:'t_hiit',slot:'train',phase:3,cat:'sport',weekly:1,t:'HIIT / intervalos (4×4 min)',m:'Objetivo 1 por semana',lvl:'mod',
+  why:'Los intervalos de alta intensidad son la vía más eficiente para subir el VO2max. Uno a la semana, sobre tu fuerza y tu zona 2, es dosis suficiente sin machacarte.',
+  src:'Protocolo noruego 4×4 (Helgerud 2007); VO2max y mortalidad (Mandsager 2018).'},
+ {id:'t_grip',slot:'train',phase:3,cat:'sport',t:'Colgarte de barra / trabajo de agarre',m:'Dead hang progresivo hasta 60 s',lvl:'strong',
+  why:'La fuerza de agarre es uno de los biomarcadores de mortalidad más potentes: cada 5 kg menos ↔ +16% mortalidad, prediciendo la muerte mejor que la presión arterial. La escalada te la cuida; en tu parón, mantenla con dead hangs.',
+  src:'Leong et al., Lancet 2015 (PURE, 139.691). Financiación pública: López-Bueno et al., Age & Ageing 2022.'},
+ {id:'t_creatine',slot:'train',phase:4,cat:'food',t:'5 g de creatina monohidrato',m:'Cualquier hora, también en días de descanso',lvl:'strong',
+  why:'El suplemento deportivo más estudiado y seguro. Con entrenamiento, ~+1,1 kg de masa magra y más fuerza. El mito del riñón está desmentido; el susto del pelo se apoya en un solo estudio de 20 personas que ni midió el pelo.',
+  src:'Delpino et al., Nutrition 2022 (35 estudios). Seguridad renal: Longobardi et al., Nutrients 2023.'},
+
+ // ---- EVENING ----
+ {id:'e_face_pm',slot:'evening',phase:2,cat:'skin',t:'Piel noche: limpiar + retinoide + hidratar',m:'Retinol 2–3 noches/semana al principio, subir según tolerancia',lvl:'strong',
+  why:'Tras el SPF, los retinoides son el activo con más evidencia: estimulan colágeno y mejoran fotoenvejecimiento y textura en ensayos. Van de noche porque se degradan con la luz; el hidratante encima mejora la tolerancia.',
+  src:'Múltiples RCTs de tretinoína/retinol en fotoenvejecimiento; Mukherjee et al., Clin Interv Aging 2006.'},
+ {id:'e_upf',slot:'evening',phase:3,cat:'food',bad:true,t:'Cena de comida real, sin ultraprocesados',m:'Ocasional, no la base de tu dieta',lvl:'strong',
+  why:'Mayor consumo de ultraprocesados se asoció a +21% mortalidad total, +50% cardiovascular y +48–53% de ansiedad/trastornos comunes. La certeza es baja por confusión residual, pero la convergencia entre decenas de cohortes es contundente.',
+  src:'Lane et al., BMJ 2024 (umbrella review, 45 metaanálisis). Rico-Campà et al., BMJ 2019 (cohorte SUN española).'},
+ {id:'e_sugar',slot:'evening',phase:4,cat:'food',bad:true,t:'Cero azúcar libre / bebidas azucaradas',m:'<25 g de azúcar libre al día',lvl:'strong',
+  why:'Cada ración diaria de bebida azucarada sube ~20% el riesgo de diabetes y cardiopatía y ~8% la mortalidad, con dosis-respuesta lineal. La OMS pide <10% (idealmente <5%) de energía en azúcar libre.',
+  src:'Li et al., Front Nutr 2023; WHO Sugars Guideline 2015.'},
+ {id:'e_alcohol',slot:'evening',phase:4,cat:'food',bad:true,t:'Alcohol: cero hoy',m:'Ningún nivel mejora la salud; el "beneficio" era un sesgo',lvl:'strong',
+  why:'La evidencia genética (aleatorización mendeliana) muestra que el riesgo cardiovascular sube de forma monótona con el alcohol: la famosa "curva J" era confusión, no cardioprotección. Ningún nivel minimiza el daño salvo cero.',
+  src:'GBD 2016, Lancet 2018. Biddinger et al., JAMA Netw Open 2022 (MR). Zhao et al., 2023 (107 cohortes, 4,8M).'},
+ {id:'e_gratitude',slot:'evening',phase:5,cat:'mind',t:'Gratitud: escribe 3 cosas concretas del día',m:'Efecto pequeño pero real y sin efectos secundarios',lvl:'weak',
+  why:'El journaling de gratitud tiene efectos pequeños pero reales sobre ánimo y ansiedad. No es magia; es un empujón barato que suma con lo demás. No sustituye a la terapia si hay ansiedad clínica.',
+  src:'Cregg & Cheavens, J Happiness Stud 2021 (meta-análisis).'},
+ {id:'e_purpose',slot:'evening',phase:5,cat:'mind',t:'Una acción hacia algo que te importa',m:'Tu propósito, no tu lista de tareas',lvl:'mod',
+  why:'Tener un propósito vital se asocia a menor mortalidad (RR 0,77 en meta-análisis). Frente a las crisis existenciales, la evidencia no propone dejar de pensar en la muerte, sino orientar la vida hacia lo que te da sentido: eso reduce la angustia.',
+  src:'Alimujiang et al., JAMA Netw Open 2019. Cohen/Bavishi/Rozanski, Psychosom Med 2016 (meta-análisis).'},
+ {id:'e_screens',slot:'evening',phase:5,cat:'sleep',bad:true,t:'Última hora sin pantallas brillantes',m:'Luz tenue y cálida; modo noche',lvl:'mod',
+  why:'La luz brillante (y azul) de noche retrasa la melatonina y fragmenta el sueño. Aquí sí importa la luz azul: no por los ojos, sino por el reloj circadiano.',
+  src:'Chang et al., PNAS 2015; coherente con Burns 2023 sobre luz nocturna.'},
+
+ // ---- SLEEP ----
+ {id:'s_regular',slot:'sleep',phase:1,cat:'sleep',t:'Acostarte y levantarte a la misma hora (±30 min)',m:'Incluido fin de semana. Tu mayor palanca de sueño',lvl:'strong',
+  why:'La regularidad del sueño predice la mortalidad MEJOR que la propia duración. Como no tienes horario de trabajo, este es tu mayor riesgo y tu mayor oportunidad: fija las horas aunque el trabajo sea flexible.',
+  src:'Windred et al., Sleep 2024 (UK Biobank, ~60.000 personas; Sleep Regularity Index > duración).'},
+ {id:'s_dur',slot:'sleep',phase:1,cat:'sleep',t:'7–9 h de oportunidad de sueño',m:'En cama, no "en teoría"',lvl:'strong',
+  why:'La relación sueño–mortalidad tiene forma de U con el mínimo en ~7–8 h. Dormir poco dispara el riesgo de lesión (~1,7×) y frena las ganancias de fuerza (hormona de crecimiento y testosterona nocturnas).',
+  src:'Cappuccio et al. 2010 (meta-análisis). Milewski 2014 (sueño y lesión).'},
+ {id:'s_room',slot:'sleep',phase:2,cat:'sleep',t:'Dormitorio fresco y oscuro; móvil fuera',m:'~18–19 °C, persiana bajada, cargador fuera del cuarto',lvl:'mod',
+  why:'El descenso de temperatura corporal facilita el sueño profundo; la oscuridad total protege la melatonina. Cargar el móvil fuera corta además el uso de madrugada y a primera hora.',
+  src:'Guías de higiene del sueño (AASM) y fisiología termorreguladora.'}
+];
+
+/* ---------- STATE ---------- */
+const KEY='protocolo_v2';
+const todayKey=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+function isoWeek(d=new Date()){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const ys=new Date(Date.UTC(t.getUTCFullYear(),0,1));const wn=Math.ceil((((t-ys)/86400000)+1)/7);return t.getUTCFullYear()+'-W'+String(wn).padStart(2,'0');}
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return{}}}
+function save(s){localStorage.setItem(KEY,JSON.stringify(s));}
+let state=load();
+if(!state.days)state.days={};
+if(!state.weeks)state.weeks={};
+if(!state.best)state.best=0;
+if(!state.phase)state.phase=1;
+
+function dayRec(){const k=todayKey();if(!state.days[k])state.days[k]={done:[]};return state.days[k];}
+function weekRec(){const k=isoWeek();if(!state.weeks[k])state.weeks[k]={};return state.weeks[k];}
+function activeDaily(){return DATA.filter(i=>i.phase<=state.phase&&!i.weekly);}
+function taperRule(it){let r='';it.taper.forEach(t=>{if(t.from<=state.phase)r=t.rule;});return r;}
+
+/* ---------- RENDER ---------- */
+const app=document.getElementById('app');
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+function lvlHtml(l){const m={strong:['strong','evidencia fuerte'],mod:['mod','evidencia moderada'],weak:['weak','evidencia limitada']}[l]||['mod','evidencia moderada'];return `<span class="lvl ${m[0]}">${m[1]}</span>`;}
+
+function render(){
+  renderPhase();
+  app.innerHTML='';
+  const day=dayRec(),wk=weekRec();
+  SLOTS.forEach(slot=>{
+    const items=DATA.filter(i=>i.slot===slot.id&&i.phase<=state.phase);
+    if(!items.length)return;
+    const dItems=items.filter(i=>!i.weekly);
+    const doneCount=dItems.filter(i=>day.done.includes(i.id)).length;
+    const sec=document.createElement('section');sec.className='slot';
+    sec.innerHTML=`
+      <div class="slot-head">
+        <div class="slot-ic"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">${SLOT_IC[slot.id]}</svg></div>
+        <div class="slot-title"><h3>${slot.name}</h3><span class="time">${slot.time}</span></div>
+        ${dItems.length?`<div class="slot-prog">${doneCount}/${dItems.length}</div>`:''}
+      </div>
+      <div class="items"></div>`;
+    const list=sec.querySelector('.items');
+    items.forEach(it=>list.appendChild(it.weekly?weeklyEl(it,wk):dailyEl(it,day)));
+    app.appendChild(sec);
+  });
+  updateHeader();
+}
+
+function tagsFor(it){
+  const t=[];
+  if(it.bad)t.push(['bad','quitar']);
+  if(it.phase===state.phase)t.push(['new','nuevo en esta fase']);
+  if(!it.bad&&(it.lvl==='strong')&&(it.id==='w_spf'||it.id==='s_regular'||it.id==='a_stop'||it.id==='m_steps'))t.push(['key','clave']);
+  if(!t.length)return'';
+  return `<div class="tags">${t.map(x=>`<span class="tag ${x[0]}">${x[1]}</span>`).join('')}</div>`;
+}
+
+function evidence(it){return `<div class="why"><div class="why-in">${lvlHtml(it.lvl)}<br>${it.why}<div class="src">${it.src}</div></div></div>`;}
+function whyBtn(){return `<button class="why-btn"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg> ver evidencia</button>`;}
+
+function dailyEl(it,day){
+  const el=document.createElement('div');el.className='item'+(day.done.includes(it.id)?' done':'')+(it.bad?' bad':'');
+  const sub=it.taper?taperRule(it):it.m;
+  el.innerHTML=`
+    <div class="row">
+      <div class="box">${CHK}</div>
+      <div class="cdot" style="background:${CAT_COLOR[it.cat]}"></div>
+      <div class="txt"><div class="t">${esc(it.t)}</div>${sub?`<div class="m">${esc(sub)}</div>`:''}${tagsFor(it)}</div>
+    </div>${whyBtn()}${evidence(it)}`;
+  el.querySelector('.row').addEventListener('click',()=>{
+    const d=dayRec();const i=d.done.indexOf(it.id);if(i>=0)d.done.splice(i,1);else d.done.push(it.id);save(state);render();
+  });
+  wireWhy(el);return el;
+}
+function weeklyEl(it,wk){
+  const n=wk[it.id]||0,target=it.weekly;
+  const el=document.createElement('div');el.className='item'+(n>=target?' done':'');
+  let dots='';for(let i=0;i<target;i++)dots+=`<button class="dot ${i<n?'on':''}" data-i="${i}">${CHK}</button>`;
+  el.innerHTML=`
+    <div class="row" style="cursor:default">
+      <div class="cdot" style="background:${CAT_COLOR[it.cat]};margin-top:6px"></div>
+      <div class="txt"><div class="t">${esc(it.t)}</div>${it.m?`<div class="m">${esc(it.m)}</div>`:''}
+        <div style="display:flex;align-items:center;gap:10px"><div class="dots">${dots}</div><span class="wk-count">${n}/${target} esta semana</span></div>${tagsFor(it)}</div>
+    </div>${whyBtn()}${evidence(it)}`;
+  el.querySelectorAll('.dot').forEach(dot=>dot.addEventListener('click',()=>{
+    const w=weekRec();const idx=+dot.dataset.i;const cur=w[it.id]||0;w[it.id]=(idx+1===cur)?idx:idx+1;save(state);render();
+  }));
+  wireWhy(el);return el;
+}
+function wireWhy(el){
+  const btn=el.querySelector('.why-btn'),panel=el.querySelector('.why');
+  btn.addEventListener('click',e=>{e.stopPropagation();const open=btn.classList.toggle('open');
+    panel.style.maxHeight=open?panel.scrollHeight+30+'px':'0';
+    btn.childNodes[btn.childNodes.length-1].textContent=open?' ocultar evidencia':' ver evidencia';});
+}
+
+let unlockOpen=false;
+function renderPhase(){
+  const p=PHASES[state.phase-1];
+  const nextItems=DATA.filter(i=>i.phase===state.phase+1);
+  const b=document.getElementById('phaseBanner');
+  b.innerHTML=`
+    <div class="phase-top">
+      <span class="phase-badge">Fase ${p.n} · ${p.wk}</span>
+      <div class="phase-info"><h2>${p.name}</h2><div class="goal">${p.goal}</div></div>
+    </div>
+    <div class="stepper">${PHASES.map(x=>`<div class="step ${x.n<state.phase?'on':''} ${x.n===state.phase?'cur':''}"></div>`).join('')}</div>
+    <div class="phase-ctrl">
+      <button class="pbtn" id="phasePrev" ${state.phase===1?'disabled':''}>← Fase anterior</button>
+      <button class="pbtn primary" id="phaseNext" ${state.phase===6?'disabled':''}>Avanzar de fase →</button>
+      ${nextItems.length?`<button class="pbtn ghost" id="unlockToggle">${unlockOpen?'ocultar':'ver qué desbloqueo'}</button>`:''}
+    </div>
+    ${nextItems.length?`<div class="unlock ${unlockOpen?'show':''}"><b>La Fase ${state.phase+1} añade:</b><ul>${nextItems.map(i=>`<li class="${i.bad?'bad':''}">${esc(i.t)}${i.bad?' — apretar hábito':''}</li>`).join('')}</ul></div>`:''}`;
+  b.querySelector('#phaseNext').addEventListener('click',()=>{if(state.phase<6){state.phase++;save(state);unlockOpen=false;render();window.scrollTo({top:0,behavior:'smooth'});}});
+  b.querySelector('#phasePrev').addEventListener('click',()=>{if(state.phase>1){state.phase--;save(state);unlockOpen=false;render();}});
+  const ut=b.querySelector('#unlockToggle');if(ut)ut.addEventListener('click',()=>{unlockOpen=!unlockOpen;renderPhase();});
+}
+
+function updateHeader(){
+  const day=dayRec(),act=activeDaily(),total=act.length;
+  const done=act.filter(i=>day.done.includes(i.id)).length;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('ringPct').textContent=pct+'%';
+  const circ=131.9;document.getElementById('ringFg').style.strokeDashoffset=circ-(circ*pct/100);
+  document.getElementById('statDone').textContent=done+' / '+total;
+  document.getElementById('statPhase').textContent=state.phase;
+  const st=computeStreak();document.getElementById('streakN').textContent=st;
+  if(st>state.best){state.best=st;save(state);}
+  document.getElementById('statBest').textContent=state.best;
+}
+function dayPct(k){const rec=state.days[k];if(!rec)return 0;const act=activeDaily();if(!act.length)return 0;return rec.done.filter(id=>act.some(i=>i.id===id)).length/act.length;}
+function computeStreak(){let streak=0;const d=new Date();
+  for(let n=0;n<400;n++){const dd=new Date(d);dd.setDate(d.getDate()-n);
+    const k=dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')+'-'+String(dd.getDate()).padStart(2,'0');
+    const p=dayPct(k);if(p>=0.6)streak++;else{if(n===0)continue;break;}}
+  return streak;}
+
+document.getElementById('today').textContent=new Intl.DateTimeFormat('es-ES',{weekday:'long',day:'numeric',month:'long'}).format(new Date());
+document.getElementById('resetDay').addEventListener('click',()=>{if(confirm('¿Reiniciar los checks de hoy?')){state.days[todayKey()]={done:[]};save(state);render();}});
+let allOpen=false;
+document.getElementById('expand').addEventListener('click',e=>{allOpen=!allOpen;
+  document.querySelectorAll('.item').forEach(el=>{const btn=el.querySelector('.why-btn'),panel=el.querySelector('.why');
+    if(allOpen&&!btn.classList.contains('open')){btn.classList.add('open');panel.style.maxHeight=panel.scrollHeight+30+'px';btn.childNodes[btn.childNodes.length-1].textContent=' ocultar evidencia';}
+    if(!allOpen&&btn.classList.contains('open')){btn.classList.remove('open');panel.style.maxHeight='0';btn.childNodes[btn.childNodes.length-1].textContent=' ver evidencia';}});
+  e.target.textContent=allOpen?'Ocultar toda la evidencia':'Ver toda la evidencia';});
+
+document.getElementById('credit').innerHTML='Estudios base (verificados contra la fuente primaria): PREDIMED — Estruch, <em>NEJM</em> 2018 · Creatina — Delpino, <em>Nutrition</em> 2022 · Ultraprocesados — Lane, <em>BMJ</em> 2024 · Alcohol — GBD, <em>Lancet</em> 2018; Biddinger, <em>JAMA Netw Open</em> 2022 · Café/cafeína — Drake, <em>J Clin Sleep Med</em> 2013; EFSA 2015 · VO2max — Mandsager, <em>JAMA Netw Open</em> 2018 · Pasos — Paluch, <em>Lancet Public Health</em> 2022 · Sedentarismo — Ekelund, <em>Lancet</em> 2016; Stamatakis, <em>Nat Med</em> 2022 · Fuerza de agarre — Leong, <em>Lancet</em> 2015 · Equilibrio — Araujo, <em>BJSM</em> 2022 · Sueño regular — Windred, <em>Sleep</em> 2024 · Luz diurna — Burns, <em>Nat Mental Health</em> 2023 · Protector solar — Hughes, <em>Ann Intern Med</em> 2013 · Naturaleza — White, <em>Sci Rep</em> 2019 · Respiración — Balban, <em>Cell Rep Med</em> 2023 · Horas de trabajo — Pega (OMS/OIT), <em>Environ Int</em> 2021 · Propósito — Alimujiang, <em>JAMA Netw Open</em> 2019 · Conexión — Holt-Lunstad, <em>PLoS Med</em> 2010. Información basada en evidencia, no consejo médico; para suplementos y vitamina D, analítica y médico.';
+
+render();
+</script>
+</body>
+</html>

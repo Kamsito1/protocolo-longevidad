@@ -182,11 +182,12 @@
   <div id="progressView"></div>
   <main id="app"></main>
 
-  <p class="sec-title">Sobre las crisis con la muerte</p>
+  <p class="sec-title">Los días que cuesta todo</p>
   <div class="note-card">
-    <p>Pensar en la muerte con 27 años no es un defecto que optimizar. Pero cuando las crisis son <b style="color:var(--txt)">frecuentes e intensas</b>, lo que más evidencia tiene no es un hábito de esta lista: es hablar con un psicólogo con enfoque <b style="color:var(--txt)">ACT</b> o terapia centrada en el sentido (reducen la ansiedad ante la muerte en ensayos; Menzies 2018, Jiang 2024).</p>
-    <p style="margin-bottom:2px">Pide ayuda si interfiere con dormir, trabajar o disfrutar, o si aparecen pensamientos de no querer estar. Eso va por delante de cualquier check.</p>
-    <span class="line">España · atención a la conducta suicida: teléfono <b>&nbsp;024</b>&nbsp; (24 h, gratuito)</span>
+    <p>Si hay días en que no te lavas los dientes, no es pereza: es la depresión. Y no se sale "teniendo ganas" primero — se sale <b style="color:var(--txt)">haciendo lo pequeño</b> aunque no apetezca, porque la acción tira del ánimo. Eso tiene nombre y evidencia: <b style="color:var(--txt)">activación conductual</b>, tan eficaz como la terapia clásica para la depresión. Por eso los básicos (cama, dientes, ducha, comer, salir) están desde el día 1.</p>
+    <p>Un día malo en el que solo marcas <b style="color:var(--txt)">dos o tres básicos</b> no es un fracaso: es exactamente lo que hay que hacer. No te exijas el 100%.</p>
+    <p style="margin-bottom:2px">Y lo más importante: si la depresión lleva tiempo contigo, hablarlo con tu <b style="color:var(--txt)">médico o un psicólogo</b> (y valorar tratamiento) es lo que más te va a ayudar — más que cualquier hábito de aquí. No es debilidad; es la vía rápida. Pide ayuda cuanto antes si aparecen pensamientos de no querer estar.</p>
+    <span class="line">España · atención a la conducta suicida: teléfono <b>&nbsp;024</b>&nbsp; (24 h, gratuito y confidencial)</span>
   </div>
 
   <div class="foot">
@@ -201,7 +202,7 @@
 
 <script>
 const CHK='<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>';
-const CAT_COLOR={work:'var(--blue)',sport:'var(--accent)',food:'var(--amber)',sleep:'var(--violet)',skin:'var(--red)',mind:'#48c9b0',health:'#e08ac0'};
+const CAT_COLOR={work:'var(--blue)',sport:'var(--accent)',food:'var(--amber)',sleep:'var(--violet)',skin:'var(--red)',mind:'#48c9b0',health:'#e08ac0',care:'#8fb8e8'};
 const SLOT_IC={
  wake:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
  ammorning:'<rect x="3" y="4" width="18" height="12" rx="1"/><path d="M2 20h20"/>',
@@ -245,7 +246,19 @@ const SESSIONS={
 };
 
 const DATA=[
- // WAKE
+ // WAKE — básicos primero (activación conductual: empezar por lo pequeño)
+ {id:'c_bed',slot:'wake',phase:1,cat:'care',t:'Levantarte y hacer la cama',m:'El primer logro del día, aunque sea el único',lvl:'strong',
+  why:'Los días grises, esto ya es ganar. La técnica con más evidencia para la depresión es la activación conductual: hacer acciones pequeñas y concretas ANTES de tener ganas, porque la acción arrastra al ánimo, no al revés. Hacer la cama es una primera victoria diminuta que enciende el resto.',
+  src:'Ekers et al., PLoS ONE 2014 (meta-análisis activación conductual). Richards et al. (COBRA), Lancet 2016 (tan eficaz como la TCC en depresión).'},
+ {id:'c_teeth_am',slot:'wake',phase:1,cat:'care',t:'Cepillarte los dientes',m:'Con la depresión cuesta; por eso está desde el día 1',lvl:'strong',
+  why:'Que no te los laves no es dejadez: es un síntoma de la depresión, y es de lo primero que se recupera al activarte. Además, las encías descuidadas se asocian a más riesgo cardiovascular y deterioro cognitivo — así que este gesto cuida boca, corazón y ánimo a la vez. Sin culpa: hoy cuenta como una victoria.',
+  src:'Activación conductual (Ekers 2014). Salud periodontal ↔ enfermedad cardiovascular (consenso EFP/AHA).'},
+ {id:'c_wash',slot:'wake',phase:1,cat:'care',t:'Ducharte o al menos lavarte la cara',m:'Agua en la cara ya cambia el día',lvl:'mod',
+  why:'La higiene personal es de las primeras cosas que se caen con la depresión y de las que más rápido devuelven sensación de control. No hace falta que sea perfecto: lavarte la cara con agua fría ya activa y despeja. Cuenta igual.',
+  src:'Activación conductual en depresión (Ekers et al. 2014; Cuijpers et al.).'},
+ {id:'c_dress',slot:'wake',phase:1,cat:'care',t:'Vestirte con ropa de día',m:'Quítate el pijama aunque te quedes en casa',lvl:'mod',
+  why:'Cambiarte de ropa marca un límite entre "en la cama" y "en marcha", y ayuda a no pasar el día en modo apagado. Es un gesto pequeño de activación con retorno grande en los días difíciles.',
+  src:'Activación conductual (Ekers et al. 2014).'},
  {id:'w_light',slot:'wake',phase:1,cat:'sleep',seasonId:'light',t:'Luz natural exterior 10 min',m:'',lvl:'mod',
   why:'Más luz de día se asoció a menos depresión y menor mortalidad; la luz matinal ancla tu reloj circadiano, clave porque tu horario baila al ser autónomo.',
   src:'Burns et al., Nature Mental Health 2023 (UK Biobank, ~87.000 personas).'},
@@ -302,6 +315,12 @@ const DATA=[
  {id:'d_ferment',slot:'midday',phase:3,cat:'food',t:'Un fermentado al día (yogur, kéfir, chucrut)',m:'Diversidad de microbiota, menos inflamación',lvl:'mod',
   why:'Una dieta rica en alimentos fermentados aumentó la diversidad de la microbiota y bajó marcadores de inflamación en un ensayo de Stanford. Un intestino diverso se asocia a mejor salud metabólica e inmune. Fácil: un yogur natural, kéfir o un poco de chucrut al día.',
   src:'Wastyk et al., Cell 2021 (ensayo, Stanford; fermentados ↑ diversidad, ↓ inflamación).'},
+ {id:'c_meals',slot:'midday',phase:1,cat:'care',t:'Comer 3 veces, sin saltarte comidas',m:'Aunque sea poco o sencillo; no te saltes la comida',lvl:'mod',
+  why:'La depresión quita el hambre y hace saltarse comidas, y eso hunde aún más la energía y el ánimo (bajones de glucosa, irritabilidad). Comer con cierta regularidad estabiliza el día. No tiene que ser perfecto ni "sano de foto": tres veces algo de verdad ya es suficiente.',
+  src:'Regularidad de comidas y estabilidad del ánimo/energía; activación conductual (Ekers et al. 2014).'},
+ {id:'c_out',slot:'midday',phase:1,cat:'care',t:'Salir de casa al menos una vez',m:'Aunque sea al portal o a por el pan',lvl:'mod',
+  why:'Salir aunque no te apetezca rompe el bucle de encierro de la depresión y suma luz, movimiento y algo de contacto. Vives en un pueblo: un paseo corto vale. El objetivo no es hacer mucho, es no quedarte dentro todo el día.',
+  src:'Activación conductual (Ekers 2014); exposición a luz y naturaleza (Burns 2023; White 2019).'},
  {id:'d_social',slot:'midday',phase:1,cat:'mind',t:'Contacto significativo con alguien',m:'Llamada, visita, quedar — no un "like"',lvl:'strong',
   why:'La conexión social es de los predictores de longevidad más potentes: la soledad eleva la mortalidad como fumar. Harvard: la calidad de las relaciones predice salud y felicidad. Vives en un pueblo: úsalo.',
   src:'Holt-Lunstad et al., PLoS Med 2010. Estudio de Harvard (Waldinger).'},
@@ -340,9 +359,12 @@ const DATA=[
  {id:'sup_labs',slot:'supp',phase:3,info:true,title:'Una vez al año: analítica y prevención',
   body:'Lo que de verdad mueve la aguja se mide, no se supone. Pide a tu médico, ~1×/año:<br><b>ApoB</b> o perfil lipídico (el mejor marcador de riesgo cardiovascular), <b>glucosa y HbA1c</b>, <b>tensión arterial</b> (el factor de riesgo nº1 y silencioso), <b>25-OH-D</b>, <b>ferritina</b> y <b>hs-CRP</b> (inflamación). Suma <b>dentista 1–2×/año</b> y revisa <b>lunares</b> (piel). Con estos números el plan deja de ser a ciegas.'},
  // EVENING
- {id:'e_teeth',slot:'evening',phase:2,cat:'health',t:'Cepillado + hilo dental',m:'Sobre todo el hilo, por la noche',lvl:'mod',
-  why:'La enfermedad de las encías (periodontitis) se asocia de forma consistente a más riesgo cardiovascular y se ha vinculado también con el deterioro cognitivo: la inflamación crónica de la boca no se queda en la boca. El hilo dental diario es la parte que casi todo el mundo se salta. Barato, dos minutos, alto retorno.',
-  src:'Meta-análisis de periodontitis y enfermedad cardiovascular (p. ej. Sanz et al., consenso EFP/AHA); Lancet Commission on dementia 2020/2024.'},
+ {id:'e_teeth',slot:'evening',phase:1,cat:'care',t:'Cepillado + hilo dental (noche)',m:'El segundo cepillado del día; el hilo, sobre todo de noche',lvl:'strong',
+  why:'Dos cepillados al día desde el primer día. Que la depresión te lo quite es normal; recuperarlo es de esas victorias que devuelven sensación de cuidarte. Y las encías descuidadas se asocian a más riesgo cardiovascular y deterioro cognitivo: la inflamación de la boca no se queda en la boca. El hilo es la parte que casi todos se saltan.',
+  src:'Periodontitis ↔ enfermedad cardiovascular (consenso EFP/AHA); Lancet Commission on dementia 2020/2024. Activación conductual (Ekers 2014).'},
+ {id:'c_tidy',slot:'evening',phase:1,cat:'care',t:'Ordenar 5 minutos tu espacio',m:'Solo 5 min; un espacio menos caótico calma la cabeza',lvl:'mod',
+  why:'Un entorno ordenado reduce la sobrecarga y da sensación de control, algo que la depresión roba. No se trata de limpiar a fondo: 5 minutos de recoger lo justo. Es activación conductual pura — pequeño, concreto y con recompensa inmediata.',
+  src:'Activación conductual (Ekers et al. 2014; Richards COBRA, Lancet 2016).'},
  {id:'e_face_pm',slot:'evening',phase:2,cat:'skin',t:'Piel noche: limpiar + retinoide + hidratar',m:'Retinol 2–3 noches/semana al principio, subir según tolerancia',lvl:'strong',
   why:'Tras el SPF, los retinoides son el activo con más evidencia: estimulan colágeno y mejoran textura y fotoenvejecimiento. Van de noche; el hidratante encima mejora la tolerancia.',
   src:'Múltiples RCTs de tretinoína/retinol; Mukherjee et al., Clin Interv Aging 2006.'},

@@ -293,6 +293,9 @@ const DATA=[
  {id:'m_eyes',slot:'ammorning',phase:2,cat:'work',t:'Regla 20-20-20 para la vista',m:'Cada 20 min, mira 20 s a ~6 m',lvl:'mod',
   why:'Las pausas de enfoque lejano relajan el ojo y alivian la fatiga visual digital. La "luz azul" apenas daña la retina; su efecto relevante es sobre el sueño.',
   src:'Sheppard & Wolffsohn, BMJ Open Ophthalmology 2018; Cochrane 2023.'},
+ {id:'m_phone',slot:'ammorning',phase:1,cat:'mind',bad:true,phone:true,t:'Móvil bajo el objetivo de hoy',m:'',lvl:'mod',
+  why:'El móvil es una adicción de comportamiento: por eso el objetivo de horas baja poco a poco (de ~5,5 h a 3 h), no de golpe. Reducir el uso —sobre todo redes— mejora el ánimo y baja la ansiedad. Trucos para cumplirlo: notificaciones fuera, pantalla en escala de grises, y el móvil lejos en los ratos de foco.',
+  src:'Ensayos de reducción de uso y bienestar (Lambert 2022). Sohn et al., BMC Psychiatry 2019 (uso problemático ↔ ansiedad/depresión).'},
  {id:'m_focus',slot:'ammorning',phase:5,cat:'work',t:'Un bloque de foco sin móvil a la vista',m:'Móvil en otra habitación o cajón',lvl:'mod',
   why:'Separar el móvil mejora foco y baja la ansiedad de fondo. Terminas antes = trabajas menos horas. Doble beneficio para un autónomo sin horario.',
   src:'Ward et al. 2017 ("brain drain" del smartphone).'},
@@ -435,8 +438,14 @@ function seasonSub(it){
     :'Otoño-invierno o poco sol: 1000–2000 UI con una comida. Ideal: mídete el 25-OH-D';
   return it.m;
 }
+// Movil: objetivo de horas/dia, baja poco a poco desde ~5,5 h hasta 3 h (adiccion de comportamiento)
+const PHONE_H=[null,5,4.5,4,3.5,3,3,3]; // semana 1..7+
+function phoneH(){return PHONE_H[Math.min(7,weekNum())];}
+function phoneRule(){const h=phoneH();return h>=5?'Hoy: móvil por debajo de '+h+' h (partías de ~5,5 h). Solo bajas un poco; sin agobios.'
+  :h<=3?'Hoy: móvil por debajo de 3 h. Ya en tu objetivo — mantenlo.'
+  :'Hoy: móvil por debajo de '+h+' h. Cada semana baja un poco más, hasta 3 h.';}
 function dayRec(){const k=todayKey();if(!state.days[k])state.days[k]={done:[]};return state.days[k];}
-function activeDaily(){return DATA.filter(i=>i.phase<=phaseNow()&&!i.info);}
+function activeDaily(){return DATA.filter(i=>!i.info);}
 function todaySession(){return SESSIONS[new Date().getDay()];}
 
 /* ---------- RENDER ---------- */
@@ -450,7 +459,7 @@ function render(){
   app.innerHTML='';
   const day=dayRec();
   SLOTS.forEach(slot=>{
-    const items=DATA.filter(i=>i.slot===slot.id&&i.phase<=phaseNow());
+    const items=DATA.filter(i=>i.slot===slot.id);
     if(!items.length)return;
     const checkable=items.filter(i=>!i.info);
     const doneCount=checkable.filter(i=>day.done.includes(i.id)).length;
@@ -476,8 +485,7 @@ function infoEl(it){
 function tagsFor(it){
   const t=[];
   if(it.bad)t.push(['bad','quitar']);
-  if(it.phase===phaseNow()&&it.phase>1)t.push(['new','nuevo esta fase']);
-  if(!it.bad&&(it.id==='w_spf'||it.id==='s_regular'||it.id==='a_stop'||it.id==='m_steps'))t.push(['key','clave']);
+  if(!it.bad&&(it.id==='w_spf'||it.id==='s_regular'||it.id==='a_stop'||it.id==='m_steps'||it.id==='c_teeth_am'))t.push(['key','clave']);
   if(!t.length)return'';
   return `<div class="tags">${t.map(x=>`<span class="tag ${x[0]}">${x[1]}</span>`).join('')}</div>`;
 }
@@ -486,7 +494,7 @@ function whyBtn(){return `<button class="why-btn"><svg viewBox="0 0 24 24" strok
 
 function dailyEl(it,day){
   const el=document.createElement('div');el.className='item'+(day.done.includes(it.id)?' done':'')+(it.bad?' bad':'');
-  const sub=it.monster?monsterRule():(it.seasonId?seasonSub(it):it.m);
+  const sub=it.monster?monsterRule():it.phone?phoneRule():(it.seasonId?seasonSub(it):it.m);
   el.innerHTML=`
     <div class="row">
       <div class="box">${CHK}</div>
@@ -567,20 +575,21 @@ function renderProgress(){
 }
 
 function renderStatus(){
-  const p=PHASES[phaseNow()-1],dn=dayNum(),wn=weekNum();
+  const dn=dayNum(),wn=weekNum(),tw=Math.min(7,wn);
   const b=document.getElementById('statusBanner');
   b.innerHTML=`
     <div class="status-top">
       <div class="daynum">Día <span>${dn}</span></div>
       <div class="status-sub">Semana ${wn} · empezaste el ${new Date(state.start+'T00:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short'})}</div>
-      <span class="phase-badge">Fase ${p.n} · ${p.name}</span>
+      <span class="phase-badge">Reduciendo adicciones</span>
     </div>
-    <div class="goal">${p.goal}</div>
-    <div class="stepper">${PHASES.map(x=>`<div class="step ${x.n<phaseNow()?'on':''} ${x.n===phaseNow()?'cur':''}"></div>`).join('')}</div>
+    <div class="goal">Todos los hábitos, activos desde hoy. Lo único que baja poco a poco son las adicciones — para no darte el mono. ${tw>=7?'Ya estás en el objetivo final.':'Semana '+tw+' de 7 de la bajada.'}</div>
+    <div class="stepper">${[1,2,3,4,5,6,7].map(w=>`<div class="step ${w<tw?'on':''} ${w===tw?'cur':''}"></div>`).join('')}</div>
     <div class="today-monster">${monsterRule()}</div>
+    <div class="today-monster" style="border-left-color:var(--violet)">${phoneRule()}</div>
     ${isHot()?'<div class="season-tip"><b>Verano · cuidado con el calor:</b> hidrátate más, evita el sol de 12–17 h y mueve paseos y cardio a primera hora o al atardecer.</div>':''}
     <div class="status-ctrl">
-      <button class="pbtn" id="resetPlan">Reiniciar plan (hoy es el día 1)</button>
+      <button class="pbtn" id="resetPlan">Reiniciar la bajada (hoy es el día 1)</button>
       <button class="pbtn" id="adjStart">Ya llevaba tiempo…</button>
     </div>`;
   b.querySelector('#resetPlan').addEventListener('click',()=>{if(confirm('¿Empezar el plan de cero? Hoy pasa a ser el Día 1 (no borra tu historial de checks).')){state.start=todayKey();save(state);render();window.scrollTo({top:0,behavior:'smooth'});}});

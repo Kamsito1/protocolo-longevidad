@@ -47,6 +47,8 @@
   .step.on{background:var(--accent)}
   .step.cur{background:var(--amber);box-shadow:0 0 0 2px rgba(224,163,74,.18)}
   .today-monster{margin-top:13px;background:var(--bg-soft);border:1px solid var(--line);border-left:3px solid var(--red);border-radius:9px;padding:10px 12px;font-size:13px;color:var(--txt)}
+  .season-tip{margin-top:9px;background:var(--bg-soft);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:9px;padding:9px 12px;font-size:12.5px;color:var(--txt-dim)}
+  .season-tip b{color:var(--amber)}
   .today-monster b{color:var(--amber)}
   .status-ctrl{display:flex;gap:8px;margin-top:13px;flex-wrap:wrap}
   .pbtn{background:var(--card);border:1px solid var(--line);color:var(--txt-dim);font-size:12px;font-weight:520;padding:7px 11px;border-radius:9px;cursor:pointer;transition:.15s}
@@ -205,21 +207,21 @@ const MONSTER_ML=[null,1000,750,500,350,250,150,0]; // semana 1..7+; >=7 -> 0
 // Plan de entrenamiento por dia real de la semana (0=Dom .. 6=Sab)
 const WD_NAMES=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const SESSIONS={
- 1:{type:'Fuerza · Torso',focus:'empuje + tracción',rest:false,ex:['Press banca o press mancuernas 3–4×6–10','Dominadas o jalón al pecho 3–4×6–10','Press militar 3×8–12','Remo 3×8–12','Fondos + face pulls 2–3×10–15']},
- 2:{type:'Fuerza · Pierna + core',focus:'la base de todo',rest:false,ex:['Sentadilla 3–4×5–8','Peso muerto rumano o hip thrust 3×8–12','Zancadas 3×10 por pierna','Gemelo 3×12–15','Plancha o rueda abdominal 3×']},
- 3:{type:'Descanso activo',focus:'recuperar sin parar del todo',rest:true,ex:['Paseo 45–60 min o Zona 2 suave en el campo','Movilidad de caderas, tobillos y hombros 10 min','Nada de gimnasio: hoy se recupera']},
- 4:{type:'Fuerza · Torso (espalda)',focus:'tracción — clave para la escalada',rest:false,ex:['Dominadas lastradas 4×5–8','Remo pesado 3–4×6–10','Press inclinado 3×8–12','Curl bíceps + extensión tríceps 2–3×10–12','Face pulls 2×15']},
- 5:{type:'Fuerza · Pierna + agarre',focus:'fuerza de agarre = biomarcador de longevidad',rest:false,ex:['Peso muerto 3–4×3–6','Sentadilla frontal o prensa 3×8–12','Dead hang 3× al fallo (colgado de barra)','Farmer carry 3× pesado','Anti-rotación de core 3×']},
- 6:{type:'HIIT o Zona 2 largo',focus:'motor cardiovascular (VO2max)',rest:false,ex:['HIIT 4×4 min al ~90% de tu FC máx, 3 min suaves entre series (bici/remo/carrera)','o Zona 2: 45–60 min a ritmo conversable','Vuelta a la calma 5 min']},
- 0:{type:'Descanso total',focus:'el músculo crece hoy, no en el gimnasio',rest:true,ex:['Sin entreno. Duerme 7–9 h, come proteína, hidrátate','Opcional: estiramientos suaves o paseo tranquilo']}
+ 1:{type:'Pierna · máquinas',focus:'sin peso libre',rest:false,ex:['Prensa 4×8–12','Extensión de cuádriceps 3×10–15','Curl femoral 3×10–15','Hip thrust en máquina o abductor/aductor 3×12','Gemelo en máquina 4×12–15','Core 3×']},
+ 2:{type:'Espalda · bíceps',focus:'tracción',rest:false,ex:['Dominadas o jalón al pecho 4×6–10','Remo con barra o máquina 4×8–12','Remo unilateral con mancuerna 3×10','Face pull 3×15','Curl bíceps + curl martillo 3×10–12']},
+ 3:{type:'Descanso activo',focus:'recuperar + tu cardio de la semana',rest:true,ex:['20–30 min de Zona 2 (bici o andar rápido): tu único cardio de resistencia, clave para el VO2max','Movilidad de caderas, hombros y muñecas 10 min','En verano hazlo a primera hora o al atardecer, nunca al sol del mediodía']},
+ 4:{type:'Hangboard + espalda de escalada',focus:'en casa · fuerza específica',rest:false,ex:['Calienta MUY bien dedos y hombros antes del hangboard','Hangboard: repeticiones en regletas (p. ej. 7 s colgado / 3 s descanso), progresando','Front lever: progresiones (tuck → advanced tuck → negativas)','Dominadas y dominadas arqueras / a una mano (asistidas si hace falta)','Escápulas y antebrazo; PARA si notas molestia en poleas o dedos']},
+ 5:{type:'Pecho · hombro',focus:'empuje',rest:false,ex:['Press banca o press mancuernas 4×6–10','Press inclinado 3×8–12','Press militar / de hombro 3×8–12','Elevaciones laterales 3×12–15','Aperturas + tríceps 3×10–12']},
+ 6:{type:'Escalada · rocódromo',focus:'tu deporte, disfrútalo',rest:false,ex:['Calentamiento progresivo antes de ir a tope','Boulder o vías según el día; escucha a los dedos','Es entreno y es disfrute: cuenta como sesión completa','Hidrátate y estira antebrazos al terminar']},
+ 0:{type:'Descanso total',focus:'el músculo y los dedos crecen hoy',rest:true,ex:['Sin entreno. Duerme 7–9 h, come proteína, hidrátate','Opcional: estiramientos suaves o paseo tranquilo a la fresca']}
 };
 
 const DATA=[
  // WAKE
- {id:'w_light',slot:'wake',phase:1,cat:'sleep',t:'Luz natural exterior 10 min',m:'Sal fuera nada más levantarte; vives en un pueblo, aprovéchalo',lvl:'mod',
+ {id:'w_light',slot:'wake',phase:1,cat:'sleep',seasonId:'light',t:'Luz natural exterior 10 min',m:'',lvl:'mod',
   why:'Más luz de día se asoció a menos depresión y menor mortalidad; la luz matinal ancla tu reloj circadiano, clave porque tu horario baila al ser autónomo.',
   src:'Burns et al., Nature Mental Health 2023 (UK Biobank, ~87.000 personas).'},
- {id:'w_water',slot:'wake',phase:1,cat:'food',t:'Un vaso de agua al levantarte',m:'Empiezas hidratado el día',lvl:'mod',
+ {id:'w_water',slot:'wake',phase:1,cat:'food',seasonId:'water',t:'Un vaso de agua al levantarte',m:'',lvl:'mod',
   why:'La deshidratación crónica (sodio sérico alto-normal) se asoció a envejecer biológicamente más rápido y +21% mortalidad. Guíate por sed y orina color pajizo claro.',
   src:'Dmitrieva et al., eBioMedicine 2023 (NIH/ARIC, 11.255 personas, 25 años).'},
  {id:'w_monster',slot:'wake',phase:1,cat:'food',bad:true,monster:true,t:'Monster',m:'',lvl:'strong',
@@ -263,8 +265,8 @@ const DATA=[
  {id:'d_caff',slot:'midday',phase:1,cat:'sleep',bad:true,t:'Última cafeína del día ≤ 15 h',m:'Ni café ni Monster después. Protege tu sueño',lvl:'strong',
   why:'La cafeína tiene vida media de 5–6 h; tomarla por la tarde recorta y fragmenta el sueño. Como la regularidad del sueño es tu mayor palanca, cortar pronto es lo más rentable.',
   src:'Drake et al., J Clin Sleep Med 2013.'},
- {id:'d_nature',slot:'midday',phase:1,cat:'mind',t:'Paseo al mediodía (sol + pasos)',m:'15–20 min fuera; suma pasos, luz y naturaleza',lvl:'mod',
-  why:'Junta pasos, luz de día y naturaleza. Pasar ≥120 min/semana en naturaleza se asoció a más bienestar y salud percibida, con umbral claro.',
+ {id:'d_nature',slot:'midday',phase:1,cat:'mind',seasonId:'nature',t:'Paseo al aire libre (sol + pasos)',m:'',lvl:'mod',
+  why:'Junta pasos, luz de día y naturaleza. Pasar ≥120 min/semana en naturaleza se asoció a más bienestar y salud percibida, con umbral claro. En verano, con 35–40 °C, evita el sol central (12–17 h): sal a primera hora o al atardecer, con sombra y agua — el golpe de calor no perdona.',
   src:'White et al., Scientific Reports 2019 (~20.000 personas).'},
  {id:'d_social',slot:'midday',phase:1,cat:'mind',t:'Contacto significativo con alguien',m:'Llamada, visita, quedar — no un "like"',lvl:'strong',
   why:'La conexión social es de los predictores de longevidad más potentes: la soledad eleva la mortalidad como fumar. Harvard: la calidad de las relaciones predice salud y felicidad. Vives en un pueblo: úsalo.',
@@ -278,8 +280,8 @@ const DATA=[
   src:'Pega et al. (OMS/OIT), Environment International 2021.'},
  // TRAIN (train_today se renderiza especial; el resto son hábitos)
  {id:'train_today',slot:'train',phase:1,cat:'sport',t:'Entrenamiento de hoy',m:'',lvl:'strong',
-  why:'No entrenas fuerza los 7 días: 4 sesiones de fuerza + 1 de cardio/HIIT + descanso activo + descanso total. La fuerza baja la mortalidad ~10–20% (con gran parte del beneficio ya en 30–60 min/semana) y cada músculo rinde más entrenado ≥2x/semana con 48 h de recuperación entre estímulos.',
-  src:'Momma et al., BJSM 2022. Schoenfeld et al., Sports Med 2016. Meeusen (ECSS/ACSM) 2013 (recuperación).'},
+  why:'Tu semana: Lun pierna (máquinas), Mar espalda-bíceps, Mié descanso activo, Jue hangboard + espalda de escalada, Vie pecho-hombro, Sáb escalada, Dom descanso. Entrenar fuerza baja la mortalidad ~10–20% y cada músculo rinde más con ≥2 estímulos/semana y ~48 h de recuperación. Un punto flojo: no tienes cardio de resistencia, y el VO2max es el predictor de supervivencia más fuerte — por eso el miércoles metes 20–30 min de Zona 2. Ojo a los dedos: hangboard (Jue) y escalada (Sáb) tan seguidos cargan las poleas; calienta y para si molesta.',
+  src:'Momma et al., BJSM 2022 (fuerza y mortalidad). Mandsager et al., JAMA Netw Open 2018 (VO2max). Meeusen (ECSS/ACSM) 2013 (recuperación).'},
  {id:'t_balance',slot:'train',phase:2,cat:'sport',t:'Equilibrio: 30 s a una pierna, cada lado',m:'También mientras te lavas los dientes',lvl:'mod',
   why:'No aguantar 10 s sobre una pierna a partir de la mediana edad se asoció a casi el doble de mortalidad. Gratis; progresa cerrando los ojos.',
   src:'Araujo et al., BJSM 2022.'},
@@ -344,6 +346,17 @@ function monsterRule(){
   const latas = ml>=750?'1 lata y media':ml>=500?'1 lata':'menos de media lata';
   return 'Hoy: máximo ~'+ml+' ml ('+latas+'), antes de las 15 h. Pon el resto en el fregadero: cada semana baja solo un poco más.';
 }
+function isHot(){const m=new Date().getMonth();return m>=5&&m<=8;} // jun-sep: calor en España
+function seasonSub(it){
+  const hot=isHot();
+  if(it.seasonId==='nature')return hot?'Con 35–40 °C NO al mediodía: pasea a primera hora o al atardecer, con sombra y agua'
+    :'Al mediodía te viene bien: aprovecha el sol y la luz. 15–20 min';
+  if(it.seasonId==='water')return hot?'Empiezas hidratado; en verano bebe más — con este calor sudas mucho'
+    :'Empiezas hidratado el día';
+  if(it.seasonId==='light')return hot?'Sal temprano, antes de que apriete el calor (10 min bastan)'
+    :'Sal fuera nada más levantarte; vives en un pueblo, aprovéchalo';
+  return it.m;
+}
 function dayRec(){const k=todayKey();if(!state.days[k])state.days[k]={done:[]};return state.days[k];}
 function activeDaily(){return DATA.filter(i=>i.phase<=phaseNow());}
 function todaySession(){return SESSIONS[new Date().getDay()];}
@@ -388,7 +401,7 @@ function whyBtn(){return `<button class="why-btn"><svg viewBox="0 0 24 24" strok
 
 function dailyEl(it,day){
   const el=document.createElement('div');el.className='item'+(day.done.includes(it.id)?' done':'')+(it.bad?' bad':'');
-  const sub=it.monster?monsterRule():it.m;
+  const sub=it.monster?monsterRule():(it.seasonId?seasonSub(it):it.m);
   el.innerHTML=`
     <div class="row">
       <div class="box">${CHK}</div>
@@ -415,7 +428,7 @@ function sessionEl(it,day){
     <button class="weekplan-btn"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg> ver semana completa</button>
     <div class="weekplan"><div class="weekplan-in">
       ${[1,2,3,4,5,6,0].map(d=>`<div class="wd ${d===wd?'today':''}"><b>${WD_NAMES[d].slice(0,3)}</b> ${SESSIONS[d].type}${SESSIONS[d].rest?'':' · '+SESSIONS[d].focus}</div>`).join('')}
-      <div class="note">4 sesiones de fuerza + 1 de HIIT/Zona 2 + descanso activo + descanso total. Cuando vuelvas a escalar en septiembre, cambia Jueves y Sábado por escalada.</div>
+      <div class="note">Tu rutina real. No hay cardio de resistencia dedicado: el miércoles añade 20–30 min de Zona 2 (bici o andar rápido) por el VO2max. Cuida los dedos: hangboard (Jue) y rocódromo (Sáb) tan seguidos cargan poleas — calienta bien y para si molesta.</div>
     </div></div>
     ${whyBtn()}${evidence(it)}`;
   el.querySelector('.srow').addEventListener('click',()=>{const d=dayRec();const i=d.done.indexOf(it.id);if(i>=0)d.done.splice(i,1);else d.done.push(it.id);save(state);render();});
@@ -443,6 +456,7 @@ function renderStatus(){
     <div class="goal">${p.goal}</div>
     <div class="stepper">${PHASES.map(x=>`<div class="step ${x.n<phaseNow()?'on':''} ${x.n===phaseNow()?'cur':''}"></div>`).join('')}</div>
     <div class="today-monster">${monsterRule()}</div>
+    ${isHot()?'<div class="season-tip"><b>Verano · cuidado con el calor:</b> hidrátate más, evita el sol de 12–17 h y mueve paseos y cardio a primera hora o al atardecer.</div>':''}
     <div class="status-ctrl">
       <button class="pbtn" id="resetPlan">Reiniciar plan (hoy es el día 1)</button>
       <button class="pbtn" id="adjStart">Ya llevaba tiempo…</button>

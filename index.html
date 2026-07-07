@@ -152,6 +152,42 @@
   .btn{background:var(--card-2);border:1px solid var(--line);color:var(--txt-dim);font-size:12.5px;padding:8px 13px;border-radius:9px;cursor:pointer;transition:.15s;font-weight:520}
   .btn:hover{border-color:var(--accent-dim);color:var(--txt)}
   .credit{margin-top:20px;font-size:11px;color:var(--txt-faint);line-height:1.6}
+
+  /* nav / tabs */
+  .tabs{display:flex;gap:5px;margin-top:16px;background:var(--card);border:1px solid var(--line-soft);border-radius:12px;padding:4px}
+  .tab{flex:1;background:none;border:none;color:var(--txt-dim);font-size:13px;font-weight:560;padding:9px 12px;border-radius:9px;cursor:pointer;transition:.15s;white-space:nowrap}
+  .tab:hover{color:var(--txt)}
+  .tab.active{background:var(--card-2);color:var(--txt);box-shadow:var(--sh)}
+
+  /* experiencias */
+  .exp-hero{margin-top:22px}
+  .exp-hero h2{font-size:22px;font-weight:720;letter-spacing:-.02em}
+  .exp-hero p{font-size:14px;color:var(--txt-dim);margin-top:7px;max-width:62ch}
+  .exp-filters{margin-top:18px;display:flex;flex-direction:column;gap:11px}
+  .filter-row{display:flex;flex-wrap:wrap;gap:6px}
+  .filter-row .flabel{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-faint);font-weight:600;width:100%;margin-bottom:1px}
+  .chip{background:var(--card);border:1px solid var(--line);color:var(--txt-dim);font-size:12.5px;font-weight:520;padding:6px 12px;border-radius:20px;cursor:pointer;transition:.15s}
+  .chip:hover{border-color:var(--accent-dim);color:var(--txt)}
+  .chip.on{background:var(--accent-dim);border-color:var(--accent);color:#eafff6}
+  .exp-count{font-size:12.5px;color:var(--txt-faint);margin:18px 2px 10px}
+  .exp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:560px){.exp-grid{grid-template-columns:1fr}}
+  .exp-card{background:var(--card);border:1px solid var(--line-soft);border-radius:14px;padding:14px;box-shadow:var(--sh);transition:.15s;display:flex;flex-direction:column;gap:8px}
+  .exp-card:hover{border-color:var(--line);transform:translateY(-1px)}
+  .ec-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .ec-scope{font-size:10px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;padding:2px 8px;border-radius:6px}
+  .scope-cordoba{background:rgba(75,208,160,.14);color:var(--accent)}
+  .scope-espana{background:rgba(224,163,74,.14);color:var(--amber)}
+  .scope-mundo{background:rgba(90,169,224,.14);color:var(--blue)}
+  .ec-cat{font-size:10.5px;color:var(--txt-faint)}
+  .exp-card h3{font-size:15px;font-weight:640;letter-spacing:-.01em}
+  .exp-card p{font-size:12.8px;color:var(--txt-dim);line-height:1.5;flex:1}
+  .ec-tags{display:flex;gap:6px;flex-wrap:wrap}
+  .ec-tag{font-size:10.5px;color:var(--txt-faint);background:var(--bg-soft);border:1px solid var(--line-soft);border-radius:6px;padding:2px 7px}
+  .ec-tag.solo{color:var(--violet)} .ec-tag.pareja{color:#e08ac0}
+  .exp-empty{color:var(--txt-faint);font-size:13px;padding:30px 4px;text-align:center}
+  .exp-foot{margin-top:22px;font-size:11.5px;color:var(--txt-faint);line-height:1.6;border-top:1px solid var(--line-soft);padding-top:14px}
+
   @media(max-width:520px){.brand h1{font-size:15px}.why-btn,.why-in{padding-left:14px}}
 </style>
 </head>
@@ -178,6 +214,12 @@
 </header>
 
 <div class="wrap">
+  <nav class="tabs">
+    <button class="tab active" data-view="rutina">Rutina</button>
+    <button class="tab" data-view="exp">Experiencias de vida</button>
+  </nav>
+
+  <div id="view-rutina">
   <div class="status" id="statusBanner"></div>
   <div id="progressView"></div>
   <main id="app"></main>
@@ -198,6 +240,18 @@
     </div>
   </div>
   <p class="credit" id="credit"></p>
+  </div><!-- /view-rutina -->
+
+  <div id="view-exp" hidden>
+    <div class="exp-hero">
+      <h2>Experiencias de vida</h2>
+      <p>La otra mitad de la longevidad: no solo sumar años, sino llenarlos. Planes para visitar pueblos, vivir aventuras y sentirte vivo — solo o en pareja. Empieza cerca de casa y ve ampliando el mundo.</p>
+    </div>
+    <div class="exp-filters" id="expFilters"></div>
+    <div class="exp-count" id="expCount"></div>
+    <div class="exp-grid" id="expGrid"></div>
+    <p class="exp-foot">Ideas para inspirarte, no una lista para tachar con prisa. Elige una, ponle fecha en el calendario y hazla realidad. Una experiencia vivida vale más que cien guardadas.</p>
+  </div>
 </div>
 
 <script>
@@ -628,6 +682,92 @@ document.getElementById('expand').addEventListener('click',e=>{allOpen=!allOpen;
 document.getElementById('credit').innerHTML='Estudios base (verificados contra la fuente primaria): PREDIMED — Estruch, <em>NEJM</em> 2018 · Creatina — Delpino, <em>Nutrition</em> 2022 · Ultraprocesados — Lane, <em>BMJ</em> 2024 · Alcohol — GBD, <em>Lancet</em> 2018 · Cafeína — Drake 2013; EFSA 2015 · VO2max — Mandsager, <em>JAMA Netw Open</em> 2018 · Pasos — Paluch, <em>Lancet Public Health</em> 2022 · Sedentarismo — Ekelund, <em>Lancet</em> 2016 · Fuerza — Momma, <em>BJSM</em> 2022; Schoenfeld, <em>Sports Med</em> 2016 · Agarre — Leong, <em>Lancet</em> 2015 · Equilibrio — Araujo, <em>BJSM</em> 2022 · Sueño regular — Windred, <em>Sleep</em> 2024 · Luz — Burns, <em>Nat Mental Health</em> 2023 · Protector solar — Hughes, <em>Ann Intern Med</em> 2013 · Naturaleza — White, <em>Sci Rep</em> 2019 · Respiración — Balban, <em>Cell Rep Med</em> 2023 · Horas de trabajo — Pega (OMS/OIT), 2021 · Propósito — Alimujiang, 2019 · Conexión — Holt-Lunstad, 2010. Información basada en evidencia, no consejo médico; para suplementos y vitamina D, analítica y médico.';
 
 render();
+
+/* ================= EXPERIENCIAS DE VIDA ================= */
+const CAT_LABELS={pueblos:'Pueblos',naturaleza:'Naturaleza',aventura:'Aventura',cultura:'Cultura',bienestar:'Bienestar',gastro:'Gastronomía'};
+const SCOPE_LABELS={cordoba:'Cerca de Córdoba',espana:'España',mundo:'Mundo'};
+const EXP=[
+ // ---- CERCA DE CÓRDOBA ----
+ {t:'Zuheros y la Cueva de los Murciélagos',d:'Pueblo blanco colgado en la Subbética, con castillo y una cueva de estalactitas para adentrarte bajo tierra.',scope:'cordoba',company:'ambos',cat:'pueblos'},
+ {t:'Kayak al atardecer en el embalse de Iznájar',d:'Rema por "el lago de Andalucía" mientras el sol cae sobre el pueblo blanco en lo alto. Paz total.',scope:'cordoba',company:'ambos',cat:'aventura'},
+ {t:'Vía Verde de la Subbética en bici',d:'Pedalea por el antiguo trazado del "tren del aceite" entre olivares, túneles y viejas estaciones.',scope:'cordoba',company:'ambos',cat:'aventura'},
+ {t:'Noche de estrellas en Los Pedroches',d:'Reserva Starlight: tumbado en la dehesa, la Vía Láctea entera sobre ti. Lleva manta y termo.',scope:'cordoba',company:'pareja',cat:'naturaleza'},
+ {t:'Cata de aceite en una almazara de Priego o Baena',d:'Aprende a distinguir un buen AOVE, huele las variedades y desayuna pan con aceite recién molido.',scope:'cordoba',company:'ambos',cat:'gastro'},
+ {t:'Priego de Córdoba, joya del barroco',d:'Piérdete por el Barrio de la Villa y la Fuente del Rey, con sus 139 caños. Pura luz andaluza.',scope:'cordoba',company:'ambos',cat:'cultura'},
+ {t:'Baños árabes (Hammam) en Córdoba',d:'Aguas termales, vapor y masaje bajo bóvedas de estrellas. El plan más relajante para dos.',scope:'cordoba',company:'pareja',cat:'bienestar'},
+ {t:'Medina Azahara al atardecer',d:'La ciudad palatina califal a los pies de la sierra, con la luz dorada del final del día.',scope:'cordoba',company:'ambos',cat:'cultura'},
+ {t:'Senderismo en el Geoparque Sierra Subbética',d:'Rutas entre encinas, cabras montesas y miradores; naturaleza salvaje a media hora de casa.',scope:'cordoba',company:'ambos',cat:'naturaleza'},
+ {t:'Rute: anís, mantecados y chocolate',d:'Destilerías centenarias, dulces artesanos y un museo del chocolate. Ideal en invierno con sus belenes.',scope:'cordoba',company:'ambos',cat:'gastro'},
+ {t:'Castillo de Almodóvar del Río',d:'Fortaleza de cuento (salió en Juego de Tronos) sobre el Guadalquivir. Vistas de vértigo.',scope:'cordoba',company:'ambos',cat:'cultura'},
+ {t:'Los Patios de Córdoba en mayo',d:'Casas abiertas rebosantes de flores y aroma a jazmín. Patrimonio de la Humanidad vivo.',scope:'cordoba',company:'ambos',cat:'cultura'},
+ {t:'Flamenco en vivo en un tablao cordobés',d:'Deja que el cante y el compás te pongan la piel de gallina. Emoción en estado puro.',scope:'cordoba',company:'pareja',cat:'cultura'},
+ {t:'Amanecer en solitario en la Sierra de Hornachuelos',d:'Madruga, sube a un mirador y desayuna viendo despertar el parque natural. Reset mental garantizado.',scope:'cordoba',company:'solo',cat:'naturaleza'},
+ // ---- ESPAÑA ----
+ {t:'Las Alpujarras (Granada)',d:'Pueblos blancos colgados de Sierra Nevada, tejados de launa, jarapas y jamón. Silencio y montaña.',scope:'espana',company:'ambos',cat:'pueblos'},
+ {t:'Cabo de Gata (Almería)',d:'Snorkel en calas vírgenes de agua turquesa, volcanes y el desierto tocando el mar.',scope:'espana',company:'ambos',cat:'naturaleza'},
+ {t:'Albarracín (Teruel)',d:'El pueblo medieval más bonito de España, de color rojizo, encaramado a un meandro. Como viajar en el tiempo.',scope:'espana',company:'pareja',cat:'pueblos'},
+ {t:'Caminito del Rey (Málaga)',d:'Pasarelas colgadas a 100 m en un desfiladero. Adrenalina y paisaje brutal en un mismo día.',scope:'espana',company:'ambos',cat:'aventura'},
+ {t:'Ruta del Cares, Picos de Europa',d:'La "garganta divina": 12 km tallados en la roca entre paredes verticales. Una de las mejores rutas de Europa.',scope:'espana',company:'ambos',cat:'naturaleza'},
+ {t:'Setenil de las Bodegas (Cádiz)',d:'Casas metidas literalmente bajo la roca. Tapea en una calle con techo de piedra.',scope:'espana',company:'ambos',cat:'pueblos'},
+ {t:'Islas Cíes (Galicia)',d:'La playa de Rodas, elegida entre las mejores del mundo. Arena blanca y agua atlántica cristalina.',scope:'espana',company:'pareja',cat:'naturaleza'},
+ {t:'Estrellas en La Palma',d:'Cielo protegido, uno de los mejores del planeta. Observatorio y noche de telescopio en la Isla Bonita.',scope:'espana',company:'ambos',cat:'naturaleza'},
+ {t:'Vendimia en La Rioja o Ribera del Duero',d:'Pisa uva, cata en bodega y come de vicio entre viñedos en otoño. Los sentidos a tope.',scope:'espana',company:'ambos',cat:'gastro'},
+ {t:'Una etapa del Camino de Santiago',d:'Camina un tramo tú solo: kilómetros, silencio y gente. Vuelves distinto de como fuiste.',scope:'espana',company:'solo',cat:'aventura'},
+ {t:'Bardenas Reales (Navarra)',d:'Un desierto de película en plena España, con formaciones que parecen otro planeta. Ve en bici o a pie.',scope:'espana',company:'ambos',cat:'aventura'},
+ {t:'Camí de Cavalls, Menorca',d:'Rodea la isla por un sendero costero de calas turquesa. Baño en cada parada.',scope:'espana',company:'pareja',cat:'naturaleza'},
+ {t:'Ordesa y Monte Perdido (Pirineos)',d:'Cascadas, circos glaciares y bosques de haya. Alta montaña que te deja pequeño.',scope:'espana',company:'ambos',cat:'naturaleza'},
+ {t:'Surf en la costa de Cantabria o Euskadi',d:'Coge tus primeras olas, come pintxos y duerme con sonido de mar. Verano distinto.',scope:'espana',company:'solo',cat:'aventura'},
+ // ---- MUNDO ----
+ {t:'Auroras boreales en Laponia',d:'Noruega, Finlandia o Islandia: el cielo bailando en verde sobre la nieve. De las cosas que se lloran de emoción.',scope:'mundo',company:'pareja',cat:'naturaleza'},
+ {t:'Japón en primavera',d:'Cerezos en flor en Kioto, templos, ryokan y baño en onsen. Otro mundo, otra calma.',scope:'mundo',company:'ambos',cat:'cultura'},
+ {t:'Ring Road de Islandia en coche',d:'Vuelta a la isla: cascadas, glaciares, aguas termales y playas negras. Libertad sobre ruedas.',scope:'mundo',company:'ambos',cat:'aventura'},
+ {t:'Trek a Torres del Paine, Patagonia',d:'Montañas imposibles, guanacos y viento del fin del mundo. Naturaleza en mayúsculas.',scope:'mundo',company:'ambos',cat:'aventura'},
+ {t:'Noche en el desierto del Sáhara (Marruecos)',d:'Dromedario hasta un campamento entre dunas y cena bajo un millón de estrellas. Cerca y barato.',scope:'mundo',company:'pareja',cat:'aventura'},
+ {t:'Safari en Tanzania o Kenia',d:'Amanecer viendo leones, elefantes y la gran migración. Te recuerda que eres parte de algo enorme.',scope:'mundo',company:'pareja',cat:'naturaleza'},
+ {t:'Machu Picchu por el Camino Inca (Perú)',d:'Cuatro días de montaña andina hasta la ciudadela al amanecer. Esfuerzo y recompensa máximos.',scope:'mundo',company:'ambos',cat:'aventura'},
+ {t:'Buceo en el Mar Rojo (Egipto)',d:'Corales, tortugas y peces de colores en aguas cálidas y claras. Barato para sacarte el título.',scope:'mundo',company:'ambos',cat:'aventura'},
+ {t:'Globo sobre la Capadocia (Turquía)',d:'Al amanecer, cientos de globos flotando sobre valles de roca. Una de las imágenes más mágicas del planeta.',scope:'mundo',company:'pareja',cat:'aventura'},
+ {t:'Trek en el Himalaya (Nepal)',d:'Valle del Annapurna: pueblos de montaña, té con locales y cumbres de 8.000 m. Viaje interior y exterior.',scope:'mundo',company:'solo',cat:'aventura'},
+ {t:'Road trip por Nueva Zelanda',d:'Fiordos, glaciares y montañas de El Señor de los Anillos. El paraíso de la aventura al aire libre.',scope:'mundo',company:'ambos',cat:'naturaleza'},
+ {t:'Islas griegas en barco (Cícladas)',d:'Salta de isla en isla: pueblos blancos y azules, calas y atardeceres imposibles en Santorini.',scope:'mundo',company:'pareja',cat:'naturaleza'},
+ {t:'Senderismo en los Dolomitas (Italia)',d:'Picos afilados, refugios de montaña y prados verdes. Los Alpes más espectaculares.',scope:'mundo',company:'ambos',cat:'naturaleza'}
+];
+
+let expF={scope:'all',company:'all',cat:'all'};
+function renderExpFilters(){
+  const rows=[
+    {key:'scope',label:'Dónde',opts:[['all','Todos'],['cordoba','Cerca de Córdoba'],['espana','España'],['mundo','Mundo']]},
+    {key:'company',label:'Con quién',opts:[['all','Todos'],['solo','Solo'],['pareja','En pareja']]},
+    {key:'cat',label:'Tipo de plan',opts:[['all','Todos'],['pueblos','Pueblos'],['naturaleza','Naturaleza'],['aventura','Aventura'],['cultura','Cultura'],['gastro','Gastronomía'],['bienestar','Bienestar']]}
+  ];
+  const c=document.getElementById('expFilters');
+  c.innerHTML=rows.map(r=>`<div class="filter-row"><span class="flabel">${r.label}</span>${r.opts.map(o=>`<button class="chip ${expF[r.key]===o[0]?'on':''}" data-key="${r.key}" data-val="${o[0]}">${o[1]}</button>`).join('')}</div>`).join('');
+  c.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>{expF[ch.dataset.key]=ch.dataset.val;renderExpFilters();renderExp();}));
+}
+function matchCompany(item){return expF.company==='all'||item.company===expF.company||item.company==='ambos';}
+function renderExp(){
+  const list=EXP.filter(e=>(expF.scope==='all'||e.scope===expF.scope)&&matchCompany(e)&&(expF.cat==='all'||e.cat===expF.cat));
+  document.getElementById('expCount').textContent=list.length+(list.length===1?' experiencia':' experiencias')+' para vivir';
+  const g=document.getElementById('expGrid');
+  if(!list.length){g.innerHTML='<div class="exp-empty">No hay planes con esos filtros. Prueba a ampliar la búsqueda.</div>';return;}
+  g.innerHTML=list.map(e=>{
+    const comp=e.company==='ambos'?['<span class="ec-tag solo">solo</span>','<span class="ec-tag pareja">en pareja</span>']
+      :e.company==='solo'?['<span class="ec-tag solo">solo</span>']:['<span class="ec-tag pareja">en pareja</span>'];
+    return `<div class="exp-card">
+      <div class="ec-top"><span class="ec-scope scope-${e.scope}">${SCOPE_LABELS[e.scope]}</span><span class="ec-cat">${CAT_LABELS[e.cat]}</span></div>
+      <h3>${esc(e.t)}</h3><p>${esc(e.d)}</p>
+      <div class="ec-tags">${comp.join('')}</div>
+    </div>`;
+  }).join('');
+}
+document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{
+  const v=tab.dataset.view;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===tab));
+  document.getElementById('view-rutina').hidden=v!=='rutina';
+  document.getElementById('view-exp').hidden=v!=='exp';
+  window.scrollTo({top:0,behavior:'smooth'});
+}));
+renderExpFilters();renderExp();
 </script>
 </body>
 </html>
